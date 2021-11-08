@@ -1,0 +1,258 @@
+import importlib
+import math
+import random
+import time
+
+import bpy
+
+from .analyzer import nonstop_baking
+from .analyzer.analyzer import Analyzer
+from .analyzer.midi_file import MidiFileAnalyzer
+from .analyzer.midi_realtime import MidiRealtimeAnalyzer
+from .analyzer.realtime import RealtimeAnalyzer
+from .analyzer.sequence import SequenceAnalyzer
+from .analyzer.shapemodifier import ShapeModifier
+from .analyzer.spectrogram import SpectrogramGenerator
+from .analyzer.video import VideoAnalyzer
+from .scripting import Scripting
+from .switchscenes import try_switch_scenes
+
+
+class AudVis:
+    sequence_analyzers = {}
+    realtime_analyzer = None
+    midi_realtime_analyzer = None
+    midi_file_analyzer = None
+    video_analyzer = None
+    scripting = Scripting()
+    _realtime_supported = None
+    _recording_supported = None
+    _video_supported = None
+    _midi_realtime_supported = None
+    input_device_options = None
+    midi_input_device_options = None
+    shape_modifier = None
+    spectrogram_generator = None
+    _mido_initialized = False
+
+    cProfile = None
+
+    def get_realtime_error(self):
+        if self.realtime_analyzer:
+            return self.realtime_analyzer.get_error()
+        return False
+
+    def get_video_error(self):
+        if self.video_analyzer:
+            return self.video_analyzer.error
+        return False
+
+    def is_realtime_supported(self, force=False):
+        if force or self._realtime_supported is None:
+            self._realtime_supported = importlib.util.find_spec('sounddevice') is not None
+        return self._realtime_supported
+
+    def is_recording_supported(self, force=False):
+        if force or self._recording_supported is None:
+            self._recording_supported = importlib.util.find_spec('soundfile') is not None
+        return self._recording_supported
+
+    def is_midi_realtime_supported(self, force=False):
+        if force or self._midi_realtime_supported is None:
+            self._midi_realtime_supported = importlib.util.find_spec('mido') is not None
+        return self._midi_realtime_supported
+
+    def is_video_supported(self, force=False):
+        if force or self._video_supported is None:
+            self._video_supported = importlib.util.find_spec('cv2') is not None
+        return self._video_supported
+
+    def driver(self, low=None, high=None, ch=None, **kwargs):
+        start = time.time()
+        if "midi" not in kwargs and ch is None:
+            ch = 1
+        val = 0
+        scene = bpy.context.scene
+        seq = kwargs.get('seq')
+
+        if self.realtime_analyzer \
+                and self.realtime_analyzer.supported \
+                and "seq" not in kwargs \
+                and "midi" not in kwargs:
+            val += self.realtime_analyzer.driver(low, high, ch)
+
+        if scene.audvis.midi_realtime.enable \
+                and self.midi_realtime_analyzer \
+                and (seq is None or seq == ''):
+            val += self.midi_realtime_analyzer.driver(low, high, ch, **kwargs)
+
+        if scene.audvis.midi_file.enable \
+                and self.midi_file_analyzer:
+            val += self.midi_file_analyzer.driver(low, high, ch, **kwargs)
+
+        if scene.sequence_editor \
+                and scene.audvis.sequence_enable \
+                and "midi" not in kwargs:
+            for seq in scene.sequence_editor.sequences_all:
+                if seq.type != 'SOUND':
+                    continue
+                if not hasattr(seq, "audvis"):
+                    continue
+                if not seq.audvis.enable:
+                    continue
+                if seq.name not in self.sequence_analyzers:
+                    continue
+                if "seq" in kwargs and kwargs["seq"] != seq.name:
+                    continue
+                analyzer = self.sequence_analyzers[seq.name]
+                val += analyzer.driver(low, high, ch)
+        if math.isnan(val):
+            val = 0
+        ret = (val * scene.audvis.value_factor) / 10
+        ret = min(scene.audvis.value_max, ret)
+        ret += scene.audvis.value_add
+        if scene.audvis.value_noise > 0:
+            ret += random.random() * scene.audvis.value_noise
+        # print(". DRIVER VALUE ", "%f" % (time.time() - start))
+        return ret
+
+    def reload(self):
+        if self.realtime_analyzer is not None:
+            self.realtime_analyzer.stop()
+        if self.video_analyzer is not None:
+            self.video_analyzer.stop()
+        self.shape_modifier = None
+        self.spectrogram_generator = None
+        self.scripting.reset()
+        self.sequence_analyzers = {}
+
+    def profiled_update_data(self, scene, dummy=None, force=False):
+        if self.cProfile is None:
+            import cProfile
+            self.cProfile = cProfile
+        p = self.cProfile.Profile()
+        p.runcall(self.update_data, scene, dummy, force=force)
+        p.dump_stats(file='/tmp/profile.dump')
+
+    last_scene_name = None
+    last_scene_frame = None
+
+    def update_data(self, scene, dummy=None, force=False):
+        start = time.time()
+        if not force \
+                and self.last_scene_name == bpy.context.scene.name \
+                and self.last_scene_frame == bpy.context.scene.frame_current_final:
+            return
+        self.last_scene_frame = bpy.context.scene.frame_current_final
+        self.last_scene_name = bpy.context.scene.name
+        scene = bpy.context.scene
+        # if scene != bpy.context.scene:  # material preview panel
+        #    return
+        if try_switch_scenes(scene):
+            return
+        Analyzer.fake_highpass_settings = (scene.audvis.value_highpass_freq, scene.audvis.value_highpass_factor, True)
+        if scene.audvis.value_aud.enable:
+            Analyzer.aud_filters = scene.audvis.value_aud
+        else:
+            Analyzer.aud_filters = None
+        Analyzer.normalize = scene.audvis.value_normalize
+        Analyzer.channels = scene.audvis.channels
+        Analyzer.normalize_clamp_to = scene.audvis.value_normalize_clamp_to
+        Analyzer.fadeout_type = scene.audvis.value_fadeout_type
+        Analyzer.fadeout_speed = scene.audvis.value_fadeout_speed
+        subframes = scene.audvis.subframes
+        if scene.audvis.realtime_enable and self.realtime_analyzer is None:
+            self.realtime_analyzer = RealtimeAnalyzer()
+            self.realtime_analyzer.load()
+        for x in range(subframes, -1, -1):
+            frame = scene.frame_current_final + x / (subframes + 1)
+            if self.realtime_analyzer is not None and self.realtime_analyzer.supported:
+                self.realtime_analyzer.on_pre_frame(scene, frame)
+            if scene.audvis.sequence_enable:
+                self._update_sequences(scene, frame)
+            if scene.audvis.midi_realtime.enable:
+                self.get_midi_realtime_analyzer(scene).on_pre_frame(scene, frame)
+            if scene.audvis.midi_file.enable:
+                self.get_midi_file_analyzer(scene).on_pre_frame(scene, frame)
+            self.scripting.run(self)
+        video_analyzer = self.get_video_analyzer(scene)
+        if video_analyzer is not None and video_analyzer.supported:
+            video_analyzer.on_pre_frame(scene, frame)
+        self._get_shape_modifier().on_pre_frame(scene, frame)
+        self._get_spectrogram_generator().on_pre_frame(scene, frame)
+        nonstop_baking.bake(scene)
+        # print("________ FRAME UPDATE ", "%f" % (time.time() - start))
+
+    def get_video_analyzer(self, scene):
+        if scene.audvis.video_webcam_enable and self.video_analyzer is None:
+            self.video_analyzer = VideoAnalyzer()
+            self.video_analyzer.load()
+        return self.video_analyzer
+
+    def get_midi_realtime_analyzer(self, scene):
+        if scene.audvis.midi_realtime.enable and self.midi_realtime_analyzer is None:
+            self.midi_realtime_analyzer = MidiRealtimeAnalyzer()
+            self.midi_realtime_analyzer.load()
+        return self.midi_realtime_analyzer
+
+    def get_midi_file_analyzer(self, scene):
+        if scene.audvis.midi_file.enable and self.midi_file_analyzer is None:
+            self.midi_file_analyzer = MidiFileAnalyzer()
+            self.midi_file_analyzer.load()
+        return self.midi_file_analyzer
+
+    def _get_shape_modifier(self):
+        if self.shape_modifier is None:
+            self.shape_modifier = ShapeModifier()
+            self.shape_modifier.load(self.driver)
+        return self.shape_modifier
+
+    def _get_spectrogram_generator(self):
+        if self.spectrogram_generator is None:
+            self.spectrogram_generator = SpectrogramGenerator()
+            self.spectrogram_generator.load(self.driver)
+        return self.spectrogram_generator
+
+    def _update_sequences(self, scene, frame):
+        if not scene.sequence_editor:
+            return
+        if not scene.audvis.sequence_enable:
+            return
+        keys = dict.fromkeys(self.sequence_analyzers.keys(), [])
+        for seqname in keys:
+            if not seqname in scene.sequence_editor.sequences_all:
+                self.sequence_analyzers.pop(seqname)
+                continue
+            seq = scene.sequence_editor.sequences_all[seqname]
+            if not seq.audvis.enable:
+                self.sequence_analyzers.pop(seqname)
+        for seq in scene.sequence_editor.sequences_all:
+            if not hasattr(seq, "audvis"):
+                continue
+            if not seq.audvis.enable:
+                continue
+            if not seq.name in self.sequence_analyzers:
+                self.sequence_analyzers[seq.name] = SequenceAnalyzer()
+                self.sequence_analyzers[seq.name].load(seq)
+            self.sequence_analyzers[seq.name].on_pre_frame(scene, frame)
+
+    def register_script(self, name, callback):
+        self.scripting.register(name, callback)
+        self.update_data(bpy.context.scene)
+
+    def get_mido(self):
+        import mido
+        if not self._mido_initialized:
+            self._mido_initialized = True
+            enabled_backends = [
+                # 'mido.backends.portmidi',
+                'mido.backends.pygame',
+            ]
+            for backend in enabled_backends:
+                try:
+                    mido.set_backend(backend)
+                    mido.get_input_names()
+                    break
+                except:
+                    pass
+        return mido

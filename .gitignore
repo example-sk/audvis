@@ -1,0 +1,5 @@
+__pycache__
+doc/bl_app_templates_user/AudVis/startup.blend1
+.idea/
+venv/
+blender_autocomplete/

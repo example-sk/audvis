@@ -1,0 +1,263 @@
+<h3>How to Start</h3>
+<p>AudVis user interface is in two places: in 3d view, press N to show N-panel, and select AudVis submenu. In the Scene
+    properties, select "AudVis" submenu.</p>
+<p>Notice: if you want to see instantly all changes made in this submenu, keep the animation playing (press
+    <em>spacebar</em> to toggle animation play).</p>
+<p><img src="https://example.sk/audvis/img/basic-view.png"></p>
+<section>
+    <h3>How to animate (almost) anything</h3>
+    <p>In the 3d view, select any object. Press key "N" to show right panel with transformation values. Right click on
+        any numeric value and if you see "Add driver", you can animate it with drivers.</p>
+    <p>Select "Add driver". In the field "Expression" write something like this:</p>
+    <p>&nbsp; &nbsp; audvis(20, 200) / 3</p>
+    <p>This expression means "set this value according to occurence of frequencies 20 Hz - 200 Hz in the current chunk
+        of sound, and divide it by 3". You will need to experiment with numbers a bit to get the best results. For more
+        info, scroll to the end of this documentation.</p>
+    <p>Feel free to experiment with the drivers anywhere. With drivers, you can animate almost anything. Try basic
+        transformations (location, rotation, scale), material nodes, compositor nodes, constraints, modifiers, shape
+        keys, some particles or physics...</p>
+    <p><img src="https://example.sk/audvis/img/uploads_1557480867651-1557480867651.png"></p>
+    <div class="clearfix"></div>
+</section>
+<section>
+    <h3>Generate Example Objects</h3>
+    <p>You can generate a bunch of objects with drivers on scale, rotation or location with it's own frequency.</p>
+    <p><em>Shape</em> - <em>Grid</em>em> makes you a grid of objects. <em>Circle</em> puts the objects to the circle,
+        and when set to Curve, you have to select the Curve object on which the new object will be placed. In case you
+        have selected a Curve, you can of course animate the path.
+        <img src="https://example.sk/audvis/img/curve-anim.gif"></p>
+    </p>
+    <p><em>X Count</em>, <em>Y Count</em> and <em>Z Count</em> means you will get X*Y*Z objects (for example 20*15*2).
+        In case you have set Shape to Curve or Circle, Y Count means count of rings and X Count means circle points. So
+        you probably want to have X Count > Y Count. Z Count</p>
+    <p><em>Collection Size</em> is used to calculate the bounds where to put all the new objects.</p>
+    <p><em>Scale</em>:
+    <ul>
+        <li>Relative - size of each generated object will be calculated magically. <em>Single Object Size Factor</em>
+            is in the magic process.
+        </li>
+        <li>Fixed - you have to set the fixed scale of the objects</li>
+        <li>Keep - AudVis will not touch the scale of the generated objects. Useful when copying a selected object.</li>
+    </ul>
+    </p>
+    <p><em>Frequency Range per Object</em> - if you set this, for example, 50, this means first object in the grid will
+        react to frequencies 0-50Hz in the sound. The second object will react to 50-100Hz, third 100-150Hz...</p>
+    <p><em>Frequency Start</em> - start counting on this frequency instead of 0.</p>
+    <p><em>Set Custom Step</em> and <em>Frequency Step</em> - if enabled and set to 10,
+        the sequence of frequencies for the objects will be 0-50Hz, 10-60Hz, 20-70Hz...</p>
+    <p><em>Objects type</em>
+    <ul>
+        <li>Cube or Suzanne - creates just a Cubes or many copies of Suzanne, the infamous monkey</li>
+        <li>Select Object - you have to select an object to make copies of it</li>
+        <li>Random from Collection - choose an collection and AudVis will choose objects from it in the random order
+        </li>
+    </ul>
+    </p>
+    <p><em>Driver</em> - choose what and how you want to animate. <em>Add</em> field adds this value to the drivers,
+        <em>Factor</em> will multiple the values by this number.
+    </p>
+    <p><em>Modify existing drivers</em> - available only if Objects Type is "Select Object". In the original object,
+        create driver (for example Thickness on Wireframe Modifier) and set the expression: <b>audvis() / 3 + .1</b>.
+        Every duplicated object will have it's own expression, in this case <b>audvis(0, 50) / 3 + .1</b>. Works best
+        with Mesh objects.</p>
+    <p><em>Randomize Location</em>, Rotation or Scale - if set, the generated objects will be on randomized
+        locations, randomly rotated and/or randomly scaled.</p>
+    <p><em>Lattice Object and Modifiers</em> - all objects in the new grid will have lattice modifier and a new lattice
+        object will be created, with one created shape key. So you can just select lattice object, enter edit mode (Tab
+        key), do anything you want (for example Alt+Shift+S is "To Sphere"). From now, the whole new grid of objects
+        will be affected by this lattice. For more informations, <a
+                href="https://duckduckgo.com/?q=blender+2.8+lattice&amp;ia=videos" target="_blank">search for blender
+            2.8 lattice</a></p>
+    <p><em>Empty parent</em> - all objects in the new grid will have one parent of type "empty". Resizing, rotating or
+        moving this empty parent will affect all his children.</p>
+    <p><em>Material</em>
+    <ul>
+        <li>Nope - do nothing</li>
+        <li>One for All - create one new material and assign it to all the generated objects. The new material is not
+            using nodes.
+        </li>
+        <li>Many - Creates a material for each generated object. This can be pretty slow and therefor not recommended.
+            The new materials are not using nodes.
+        </li>
+        <li>Copy and Modify - select a material and AudVis will change drivers' expressions the same way as in the case
+            of "Modify Existing Drivers".
+        </li>
+    </ul>
+    </p>
+    <p><em>Collections</em> - the generated objects are put in the collections named AudVisExample and
+        AudVisExampleRanges. Here you can set what to do with them after generating multiple times.
+    <ul>
+        <li>Replace by New Ones - the old collections will be deleted</li>
+        <li>Keep and Create New ONes - just add new collections, don't delete the old ones</li>
+        <li>Reuse - in case you reference somewhere to the collection and you want to regenerate the objects, this
+            setting is what you want.
+        </li>
+    </ul>
+    </p>
+
+    <p>Finally, press the button Generate AudVis Example.</p>
+    <p>Notice: this button will also delete previous objects generated this way. To keep multiple groups, rename
+        collection "AudVisExample" to something else, for example, my_visualization.</p>
+    <p><img src="https://example.sk/audvis/img/generator.png">
+    </p>
+    <div class="clearfix"></div>
+</section>
+<section>
+    <h3>Sequence Analyzer</h3>
+    <p>If you want to make a music video for a song (or a full album), use Sequence Analyzer. Enable "Sequence Analyzer"
+        and
+        add a sound in Sequencer (create a new workspace "Video Editing" -&gt; "Video Editing").
+        The button "Add Sount Sequence" is a shortcut to this. Just don't forget to set the Start Frame.</p>
+    <p>Enable "Smaller Chunks" option if you are working with huge music files to prevent problems with high memory
+        usage.</p>
+    <p>You can allow or disable any sound sequence by marking and unmarking the checkbox left to the name of the
+        sequence.</p>
+    <p>By playing around "Audio Offset" setting, you can (un)synchronize sound with picture.</p>
+    <p>Button "Align End Frame by Sequences" sets the value of end frame (default 250) to last frame of any sequence in
+        sequence editor. This is useful if making a music video with Sequence Analyzer.</p>
+    <p>Notice: Loading sound data occurs after stepping the current frame (right/left arrow) or by playing animation
+        (spacebar). When this loading occurs by playing animation, sound and picture can be out of sync. When this
+        happens, just pause and play the animation again. This problem does not apply when rendering.</p>
+    <p><img src="https://example.sk/audvis/img/uploads_1557503076470-1557503076470.png" style="width: 300px;"
+            class="fr-fic fr-dib fr-fil">
+    </p>
+    <div class="clearfix"></div>
+</section>
+<section>
+    <h3>Real Time Analyzer</h3>
+    <p>If you want to use Real Time Analyzer, you will need to install python package "sounddevice". Press Install
+        button and wait if it works. If doesn't:
+        <br/>
+    <div>If you are running Windows:
+        <ul>
+            <li>
+                It's possible you will need to install <a
+                    href="https://www.microsoft.com/en-us/download/details.aspx?id=52685"><em>Microsoft Visual C++ 2015
+                Redistributable Update 3 RC</em></a>.
+            </li>
+            <li>
+                Try running Blender as Administrator, and press install button again. (<a
+                    href="https://www.youtube.com/watch?v=nNVdaJXYCbA"
+                    target="_blank">how to run a program as administrator</a>)
+            </li>
+        </ul>
+        On Linux, you will need to install libportaudio2 (on debian or ubuntu,
+        the command is <em>sudo apt-get install libportaudio2</em>).
+    </div>
+    </p>
+    <p>If the Install button still doesn't work, run this command in your command line or terminal:</p>
+    <pre>    cd /where/is/your/blender/installed
+    ./2.80/python/bin/python3.7m -m ensurepip
+    ./2.80/python/bin/python3.7m -m pip install sounddevice</pre>
+    <p>When you have everything installed, you just need to allow Real Time Analyzer by marking a checkbox.</p>
+    <p>Now play some music in any music player or in web browser. Or plug in a sound input to your computer.</p>
+    <p>Some sound configuration in your operating system can be needed. On Windows, search for "Stereo Mix". On Linux,
+        install <em>Pavucontrol</em> and enable/disable microphones if needed.</p>
+    <p>Notice: if you plan using Real Time Analyzer seriously, don't forget to temporarily turn off all automatic
+        updates (system updates, Java updates), automatic sleep, automatic screen lock, turn off your e-mail client
+        notifications to not get disturbed by unnecessary notifications or anything else. And also don't forget to put
+        your laptop on charger.</p>
+    <p><img src="https://example.sk/audvis/img/uploads_1557480866742-1557480866742.png"></p>
+    <div class="clearfix"></div>
+</section>
+<section>
+    <h3>Shape Modifier</h3>
+    <p>Shape Modifier makes two shape keys - original and target. In every frame it copies data (like location) from
+        original shape key into the target, and modifiers every vertex.</p>
+    <p>Supported object types are Mesh, Curve, Surface and Lattice.</p>
+    <p><em>Animation Type</em>
+    <ul>
+        <li>Normal - location of each vertex is moved in the direction away from the center of the object</li>
+        <li>Location Z - use with grid mesh. All the vertices are moved in the Z direction</li>
+        <li>Location - you can choose the direction in which you want to move the vertices</li>
+        <li>Track to Object - all the vertices will be pushed towards the location of this object.</li>
+        <li>Vertex Group Weight - available only with Mesh objects. This creates two vertex groups - AudVis Origin and
+            AudVis Target. The AudVis Origin group is copied into AudVis Target, and then the AudVis Target is modified.
+        </li>
+        <li>Curve Radius - curve radius is modified instead of location. Available only with the Curve objects.</li>
+    </ul>
+    </p>
+    <p><em>Order</em> - how to assign the frequency to the vertex. Ascending, descending or random. Notice: when
+        creating a Grid mesh and later subdividing it, the order of the vertices can be disappointing.</p>
+    <p>
+        <img src="https://example.sk/audvis/img/shape-modifier.png">
+        <img src="https://example.sk/audvis/img/shape-modifier.gif">
+    </p>
+    <div class="clearfix"></div>
+</section>
+<section>
+    <h3>Spectrogram</h3>
+    <p>Generates an spectrogram image. It can be used as a material texture, hair length texture, or anywhere else.</p>
+    <p><em>Mode</em>
+    <ul>
+        <li>Rolling - you set the image width and height. Bottom row is filled with the new colors.</li>
+        <li>One Image - you set the image width. Height is set to the duration of your animation (end - start + 1).
+            The row to write the new colors is changing each frame.
+        </li>
+    </ul>
+    </p>
+    <p><em>Image Width</em> - </p>
+</section>
+<section>
+    <h3>Video Capture</h3>
+    <p>If enabled, a new image with name "audvis.jpg" will be created and periodically updated by a picture taken from
+        your webcam. While playing animation, this projects a live video directly onto your materials.</p>
+    <p>Notice: the image is first saved to the disk and then loaded. If you have HDD, this can be a little bit slow. If
+        you have SSD, this can cause some wear out. You can change the place where AudVis saves the temporary files in
+        Blender Preferences / File Paths / Data / Temporary Files (restart Blender after changing this setting).</p>
+    <p><img src="https://example.sk/audvis/img/uploads_1557501876953-1557501876953.png" style="width: 299px;"
+            class="fr-fic fr-dib fr-fil">
+    </p>
+    <div class="clearfix"></div>
+</section>
+<section>
+    <h3>General Settings</h3>
+    <p><em>Subframes</em> - use this if you need calculated values more often than once per video frame, for scripting
+        purposes. If you don't use scripting, keep this value on default - 0.</p>
+    <p><em>Sample size</em> - this means how long chunk of sound you want to analyze. Default value 100 means 0.1
+        second. Experiment with this value if you want, it can affect the feel from the result video.</p>
+    <div class="clearfix"></div>
+</section>
+<section>
+    <h3>Scripting</h3>
+    <p>If you don't have Scripting workspace (in the top row in Blender), add a new workspace by clicking on "+" on the
+        right of the workspace list, and choose General &gt; Scripting. Select template from Templates -&gt; AudVis
+        Script Templates</p>
+    <p>Now you can run the script (Alt+P). First parameter "name" in the function register_script is there for rewriting
+        callback by name so you can run the script as many times as you want.</p>
+    <p>Notice: if you want to play with scripting, you will need to read a lot of <a
+            href="https://docs.blender.org/api/blender2.8/" target="_blank">reference manual for Blender Python API</a>.
+    </p>
+    <div class="clearfix"></div>
+</section>
+<section>
+    <h3>Driver Expression Arguments</h3>
+    <h4>audvis(100, 250, ch=1, seq="MyGreatSong.mp3")</h4>
+    <p>
+        first two arguments mean range in Hertz, in this case 100 Hz - 250 Hz<br/>
+        <em>ch</em> argument (optional) means first channel. By default, only one channel analyzed. You can increase the
+        number of analyzed channels in the main AudVis panel, setting "Channels Count" to 2 or higher.<br/>
+        <em>seq</em> argument (optional) means "only get values from sequence named ..."
+    </p>
+    <h4>audvis(midi=1, ch=2, device='MIDI Device 1')</h4>
+    <p>
+        <em>midi=1</em> toggles the engine to read midi data instead of sound data.<br/>
+        <em>ch</em> argument (optional) means "only get data from this channel"<br/>
+        <em>device</em> argument (optional) is name of a RealTime MIDI device (panel Midi Realtime)<br/>
+    </p>
+    <h4>audvis(midi=1, file='myExcellentMidiFile.mid', track='Track 3', ch='2', device='MIDI Device 1')</h4>
+    <p>
+        <em>midi=1</em> toggles the engine to read midi data instead of sound data.<br/>
+        <em>file</em> argument (optional) is the name of the MIDI file from the "Midi File" panel<br/>
+        <em>track</em> argument (optional) is the name of the track inside of the selected Midi file by "file"
+        argument<br/>
+        <em>ch</em> argument (optional) means "only get data from this channel"
+    </p>
+    <h4>Customizing expressions</h4>
+    <p>
+        If you want to customize your expressions and/or add some math, look for the <a
+            href="https://docs.blender.org/manual/en/latest/animation/drivers/drivers_panel.html#simple-expressions">
+        blender's driver expressions documentation</a>. For example <em>clamp(audvis(100, 250), 0, 5)</em> clamps the
+        value between 0 and 5.
+    </p>
+</section>
