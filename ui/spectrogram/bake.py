@@ -50,6 +50,9 @@ class AUDVIS_OT_spectrogrambake(Operator):
     def modal(self, context, event):
         if event.type == 'TIMER':
             context.scene.frame_set(self.cur_frame)
+            if 'AudVis Spectrogram' not in bpy.data.images:
+                from audvis import audvis
+                audvis.spectrogram_generator.modify(bpy.context.scene)
             if context.scene.audvis.spectrogram.mode in ('rolling', 'snapshot'):
                 f = os.path.join(bpy.path.abspath(context.scene.audvis.spectrogram.bake_path),
                                  'audvis-spect-%04d.png' % self.cur_frame)  # TODO!!!
