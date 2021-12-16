@@ -33,8 +33,17 @@ class AUDVIS_PT_Bge(Panel):
             col.operator('audvis.bge_register_component', text=item[1]).component = item[0]
 
 
+class AUDVIS_PT_BgeProps(AUDVIS_PT_Bge):
+    bl_space_type = 'PROPERTIES'
+    bl_region_type = 'WINDOW'
+    bl_category = "game"
+    bl_label = "AudVis"
+    bl_order = 3000000  # move to lower positions, under the default panels
+
+
 classes = [
     bge_register_component.AUDVIS_OT_BgeRegisterComponent,
     bge_logic_create.AUDVIS_OT_BgeLogicCreate,
     AUDVIS_PT_Bge,
+    AUDVIS_PT_BgeProps,
 ]
