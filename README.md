@@ -1,10 +1,18 @@
 # Blender AudVis
 
-AudVis is a Blender 2.8 and higher add-on helping you to build awesome audio visualizations. The main features are Real Time Analyzer and Sequence Analyzer.
+AudVis is a Blender 2.8 and higher add-on helping you to build awesome audio visualizations. The main features are Real
+Time Analyzer and Sequence Analyzer.
 
-For original documentation, visit https://www.blendermarket.com/products/audvis/docs
+## Important links:
 
-For download, visit https://github.com/example-sk/audvis/releases
+- **[Download](https://github.com/example-sk/audvis/releases)**
+- [BlenderMarket product page](https://www.blendermarket.com/products/audvis)
+- [YouTube channel](https://www.youtube.com/channel/UCiJzmdCGdjLc_fpQgZ2fEhQ)
+- [blenderartists.org discussion](https://blenderartists.org/t/audvis-audio-visualization-add-on/1183964)
+- [Discord](https://discord.gg/bFzVmBGg)
+- [Old documentation](https://www.blendermarket.com/products/audvis/docs)
+
+## Documentation:
 
 * [Installing python packages](doc/packages-install.md)
 * Analyzers:
