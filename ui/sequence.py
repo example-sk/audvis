@@ -133,6 +133,7 @@ class AUDVIS_PT_sequence(Panel):
             col.prop(seq, "frame_offset_start")
             col.prop(seq, "frame_final_duration")
         col = layout.column(align=True)
+        col.prop(context.scene.audvis, "sequence_chunks")
         col.operator("audvis.framealign")
 
 
