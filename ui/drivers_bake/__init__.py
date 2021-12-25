@@ -42,8 +42,11 @@ class DriverBakery:
             bpy.data.speakers,
             bpy.data.textures,
             bpy.data.worlds,
+            bpy.data.node_groups,
             # TODO: make this list complete
         ]
+        if hasattr(bpy.data, "volumes"):
+            traverse_list.append(bpy.data.volumes)
         for traverse in traverse_list:
             for obj in traverse:
                 self._add_if_driver(obj)
