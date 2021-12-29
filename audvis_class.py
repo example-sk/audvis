@@ -74,12 +74,13 @@ class AudVis:
         val = 0
         scene = bpy.context.scene
         seq = kwargs.get('seq')
+        additive = kwargs.get('additive', False)
 
         if self.realtime_analyzer \
                 and self.realtime_analyzer.supported \
                 and "seq" not in kwargs \
                 and "midi" not in kwargs:
-            val += self.realtime_analyzer.driver(low, high, ch)
+            val += self.realtime_analyzer.driver(low, high, ch, additive)
 
         if scene.audvis.midi_realtime.enable \
                 and self.midi_realtime_analyzer \
@@ -105,11 +106,12 @@ class AudVis:
                 if "seq" in kwargs and kwargs["seq"] != seq.name:
                     continue
                 analyzer = self.sequence_analyzers[seq.name]
-                val += analyzer.driver(low, high, ch)
+                val += analyzer.driver(low, high, ch, additive)
         if math.isnan(val):
             val = 0
         ret = (val * scene.audvis.value_factor) / 10
-        ret = min(scene.audvis.value_max, ret)
+        if not additive:
+            ret = min(scene.audvis.value_max, ret)
         ret += scene.audvis.value_add
         if scene.audvis.value_noise > 0:
             ret += random.random() * scene.audvis.value_noise
@@ -160,6 +162,9 @@ class AudVis:
         Analyzer.normalize_clamp_to = scene.audvis.value_normalize_clamp_to
         Analyzer.fadeout_type = scene.audvis.value_fadeout_type
         Analyzer.fadeout_speed = scene.audvis.value_fadeout_speed
+        Analyzer.additive_type = scene.audvis.value_additive_type
+        Analyzer.is_first_frame = scene.frame_current_final == scene.frame_start
+        Analyzer.additive_reset_onfirstframe = scene.audvis.value_additive_reset
         subframes = scene.audvis.subframes
         if scene.audvis.realtime_enable and self.realtime_analyzer is None:
             self.realtime_analyzer = RealtimeAnalyzer()

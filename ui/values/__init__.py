@@ -28,27 +28,44 @@ class AUDVIS_PT_values(Panel):
 
     def draw(self, context):
         self._aud_props(context)
+        props = context.scene.audvis
         layout = self.layout
-        if not context.scene.audvis.value_aud.enable:
+        if not props.value_aud.enable:
             col = layout.column(align=True)
-            col.prop(context.scene.audvis, "value_highpass_freq")
-            col.prop(context.scene.audvis, "value_highpass_factor")
+            col.prop(props, "value_highpass_freq")
+            col.prop(props, "value_highpass_factor")
         col = layout.column(align=True)
-        # col.prop(context.scene.audvis, "value_logarithm")
-        col.prop(context.scene.audvis, "value_factor")
-        col.prop(context.scene.audvis, "value_max")
-        col.prop(context.scene.audvis, "value_add")
-        col.prop(context.scene.audvis, "value_noise")
+        # col.prop(props, "value_logarithm")
+        col.prop(props, "value_factor")
+        col.prop(props, "value_max")
+        col.prop(props, "value_add")
+        col.prop(props, "value_noise")
 
         col = layout.column(align=True)
-        col.prop(context.scene.audvis, "value_normalize")
-        if context.scene.audvis.value_normalize == 'max':
-            col.prop(context.scene.audvis, "value_normalize_clamp_to")
+        row = col.row()
+        row.label(text="Normalize Value")
+        row.prop(props, "value_normalize", text="")
+        if props.value_normalize == 'max':
+            col.prop(props, "value_normalize_clamp_to")
 
         col = layout.column(align=True)
-        col.prop(context.scene.audvis, "value_fadeout_type")
-        if context.scene.audvis.value_fadeout_type != 'off':
-            col.prop(context.scene.audvis, "value_fadeout_speed")
+        row = col.row()
+        row.label(text="Fade Out Type")
+        row.prop(props, "value_fadeout_type", text="")
+        if props.value_fadeout_type != 'off':
+            col.prop(props, "value_fadeout_speed")
+        row = col.row()
+        row.label(text="Additive Type")
+        row.prop(props, "value_additive_type", text="")
+        if props.value_additive_type != 'off':
+            col.prop(props, "value_additive_reset")
+        if props.value_additive_type != 'off' or props.value_fadeout_type != 'off':
+            col.label(text="Warning: Fadeout (a little bit)")
+            col.label(text="and Additive (a lot)")
+            col.label(text="can cause inconsistent state")
+            col.label(text="if you skip frames.")
+            col.label(text="Maybe you want to bake drivers")
+            col.label(text="before rendering.")
 
     def _aud_props(self, context):
         col = self.layout.column(align=True)

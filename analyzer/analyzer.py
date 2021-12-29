@@ -22,11 +22,15 @@ class Analyzer:
     samplerate = None
     resolution_step = 1  # resolution_step=10 means resolution 10 Hz
     last_fft = None
+    additive_fft = None
     fake_highpass_settings = (1000, .3, True)
     normalize = 'no'
     normalize_clamp_to = 100.0
     fadeout_type = 'off'
     fadeout_speed = .0
+    additive_type = 'off'
+    is_first_frame = False
+    additive_reset_onfirstframe = False
     channels = 1
     aud_filters = None
     _curve_mapping_cache = None
@@ -35,18 +39,21 @@ class Analyzer:
     def load(self):
         raise NotImplementedError()
 
-    def driver(self, low=None, high=None, ch=1):
+    def driver(self, low=None, high=None, ch=1, additive=False):
         if low is None:
             return 0
-        if self.last_fft is None:
+        fft = self.last_fft
+        if additive and self.additive_fft is not None:
+            fft = self.additive_fft
+        if fft is None:
             return 0
-        if len(self.last_fft) < ch:
+        if len(fft) < ch:
             return 0
         if low == 'max' and high is None:
-            return np.argmax(self.last_fft[ch - 1]) * self.resolution_step
+            return np.argmax(fft[ch - 1]) * self.resolution_step
         i_from = math.floor(low / self.resolution_step)
         i_to = math.ceil(high / self.resolution_step)
-        lst = self.last_fft[ch - 1][i_from:i_to]
+        lst = fft[ch - 1][i_from:i_to]
         val = self._avg(lst)
         if bpy.context.scene.audvis.value_logarithm:
             val = math.log(val + 1)
@@ -61,6 +68,7 @@ class Analyzer:
     def empty(self):
         self.lastdata = None
         self.last_fft = None
+        self.additive_fft = None
 
     def on_pre_frame(self, scene, frame):
         raise NotImplementedError()
@@ -86,7 +94,9 @@ class Analyzer:
         if self.aud_filters is not None:
             self._apply_aud_filters()
         prev_fft = self.last_fft
+        prev_additive_fft = self.additive_fft
         self.last_fft = []
+        self.additive_fft = []
         if not len(self.lastdata):
             return
         available_channel_count = len(self.lastdata[0])
@@ -113,6 +123,7 @@ class Analyzer:
             elif self.normalize == 'ortho':
                 fft *= 100
 
+            fft_before_fadeout = fft
             # TODO: how to use this? As a result, or something like audvis(10, 100, falloff=True) ?
             if self.fadeout_type != 'off' and (prev_fft is not None) and (0 <= ch < len(prev_fft)):
                 if self.fadeout_type == 'exponential':
@@ -120,6 +131,17 @@ class Analyzer:
                 else:
                     tmp = prev_fft[ch] - 10 * self.fadeout_speed
                 fft = np.maximum(tmp, fft)
+            if self.additive_type != 'off':
+                if self.is_first_frame and self.additive_reset_onfirstframe:
+                    prev_additive_fft = None
+                fft_for_additive = fft
+                if self.additive_type == 'raw':
+                    fft_for_additive = fft_before_fadeout
+                if type(prev_additive_fft) == list and len(prev_additive_fft) > ch:
+                    self.additive_fft.append(np.add(prev_additive_fft[ch], fft_for_additive))
+                else:
+                    self.additive_fft.append(fft_for_additive)
+                # print(self.additive_fft)
             self.last_fft.append(fft)
 
     def _curve(self, fft_data):

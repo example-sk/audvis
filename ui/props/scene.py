@@ -51,7 +51,6 @@ class AudvisSceneProperties(bpy.types.PropertyGroup):
     # spread drivers
     spreaddrivers: bpy.props.PointerProperty(type=spreaddrivers.AudvisSceneSpreaddriversProperties)
 
-
     # nonstop baking (Bake Drivers)
     nonstop_baking_collection: bpy.props.PointerProperty(name="Nonstop Baking Collection", type=bpy.types.Collection,
                                                          description="Inserts keyframes all the time.")
@@ -83,6 +82,12 @@ class AudvisSceneProperties(bpy.types.PropertyGroup):
         ('linear', "Linear", ""),
         ('exponential', "Exponential", ""),
     ])
+    value_additive_type: bpy.props.EnumProperty(name="Additive Type", default="raw", items=[
+        ('off', "Off", ""),
+        ('raw', "Raw", ""),
+        ('use_fadeout', "Use Fadeout", ""),
+    ])
+    value_additive_reset:bpy.props.BoolProperty(name="Reset Additive on First Frame", default=True)
     value_fadeout_speed: bpy.props.FloatProperty(name="Fade Out Speed", min=0, max=1, default=.1)
 
     # aud.Sound magic
@@ -215,6 +220,11 @@ class AudvisSceneProperties(bpy.types.PropertyGroup):
 
     example_driver_add: bpy.props.FloatProperty(name="Add", default=0.0)
     example_driver_factor: bpy.props.FloatProperty(name="Factor", default=1.0)
+    example_driver_additive: bpy.props.EnumProperty(name="Additive", items=[
+        ("off", "Off",""),
+        ("rotation", "For rotation only",""),
+        ("all", "All",""),
+    ], description="Use additive=True in the driver expression")
     example_randomize_location: bpy.props.BoolProperty(name="Randomize Location", default=False)
     example_randomize_rotation: bpy.props.FloatProperty(name="Randomize Rotation", default=0, min=0, max=1)
     example_randomize_scale: bpy.props.FloatProperty(name="Randomize Scale", default=0, min=0, max=1)

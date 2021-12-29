@@ -52,3 +52,4 @@ class AudvisSpectrogramProperties(bpy.types.PropertyGroup):
         ('set', 'Set', ''),
     ])
     skip_frames: bpy.props.IntProperty(name="Skip Frames", default=0, min=0)
+    # TODO: support png and targa raw, maybe other formats for baking

@@ -7,6 +7,7 @@ class AudvisSceneSpreaddriversProperties(bpy.types.PropertyGroup):
     add: bpy.props.FloatProperty(name="Add Value", default=0)
     freqrange: bpy.props.FloatProperty(name="Frequency Range Per Iteration", default=50)
     freqstart: bpy.props.FloatProperty(name="Frequency Start", default=0, min=0)
+    additive: bpy.props.BoolProperty(name="Additive", default=False)
 
     freq_step_enable: bpy.props.BoolProperty(name="Set Custom Step", default=False)
     freq_step: bpy.props.FloatProperty(name="Frequency Step ", default=5.0, soft_min=0, soft_max=1000,

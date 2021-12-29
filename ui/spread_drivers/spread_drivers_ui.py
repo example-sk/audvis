@@ -32,6 +32,8 @@ class AUDVIS_PT_spreaddrivers(Panel):
 
         col.prop(props, "factor")
         col.prop(props, "add")
+        if props.freq_seq_type != "midi":
+            col.prop(props, "additive")
         col.prop(props, "freq_seq_type")
         if props.freq_seq_type == "midi":
             ui_lib.generators_ui_midi(self, context, props.midi)

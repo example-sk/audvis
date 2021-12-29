@@ -99,6 +99,7 @@ class AUDVIS_PT_Generator(Panel):
         col.label(text="Driver:")
         col.prop(scene.audvis, "example_driver_add")
         col.prop(scene.audvis, "example_driver_factor")
+        col.prop(scene.audvis, "example_driver_additive")
 
         if scene.audvis.example_object_type == 'Select Object:':
             col.prop(scene.audvis, "example_driver_objectdrivers")

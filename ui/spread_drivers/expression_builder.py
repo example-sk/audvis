@@ -36,6 +36,8 @@ def build_expression(props, add=0.0, iterations_add=0):
             args += ', seq=' + repr(props.sound_sequence)
         if props.channel != 1:
             args += ', ch={}'.format(props.channel)
+        if props.additive:
+            args += ', additive=True'
 
     main_expr = "audvis({})".format(args)
     if props.factor != 1.0:

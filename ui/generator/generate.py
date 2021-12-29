@@ -8,7 +8,7 @@ from . import material
 from ...note_calculator import calculate_note
 
 
-def build_expression(freq_from, freq_to, conf, factor=None):
+def build_expression(freq_from, freq_to, conf, factor=None, rotational=False):
     ch = conf.example_channel
     add = conf.example_driver_add
     if factor is None:
@@ -16,6 +16,9 @@ def build_expression(freq_from, freq_to, conf, factor=None):
     kwargs = ""
     if ch != 1:
         kwargs += ", ch=%i" % ch
+    if conf.example_driver_additive != 'off':
+        if conf.example_driver_additive == 'all' or (conf.example_driver_additive == 'rotation' and rotational):
+            kwargs += ", additive=True"
     if conf.example_sound_sequence:
         kwargs += ", seq=" + repr(conf.example_sound_sequence)
     expr = "audvis({}, {}{})".format(freq_from, freq_to, kwargs)
@@ -167,8 +170,12 @@ class Generator:
                             return {'CANCELLED'}
                         template_obj = random.choice(sel_collection.objects)
                     if self.conf.example_freq_seq_type == 'notes':
-                        freq_from = calculate_note((index + self.conf.example_note_offset) * self.conf.example_note_step, self.conf.example_note_a4_freq)
-                        freq_to = calculate_note((index + self.conf.example_note_offset + 1) * self.conf.example_note_step, self.conf.example_note_a4_freq)
+                        freq_from = calculate_note(
+                            (index + self.conf.example_note_offset) * self.conf.example_note_step,
+                            self.conf.example_note_a4_freq)
+                        freq_to = calculate_note(
+                            (index + self.conf.example_note_offset + 1) * self.conf.example_note_step,
+                            self.conf.example_note_a4_freq)
                         freq_from = round(freq_from * 100) / 100
                         freq_to = round(freq_to * 100) / 100
                     else:
@@ -322,7 +329,7 @@ class Generator:
             d = obj.driver_add("location", 2)
             d.driver.expression = expr + (" + %f" % (obj.location[2]))
 
-        expr = build_expression(freq_from, freq_to, self.conf)
+        expr = build_expression(freq_from, freq_to, self.conf, rotational=True)
         if self.conf.example_driver_rotx:
             d = obj.driver_add("rotation_euler", 0)
             d.driver.expression = expr + (" + %f" % (obj.rotation_euler[0]))
