@@ -43,7 +43,7 @@ class RealtimeThread(threading.Thread):
             'dtype': 'float32',
             'channels': req_channels,
             'callback': self._stream_cb,
-            'blocksize': 256 * 2, # TODO: select
+            'blocksize': 256 * 2,  # TODO: select
             'device': None,
         }
         i = 0
@@ -78,15 +78,19 @@ class RealtimeThread(threading.Thread):
         return True
 
     def _stream_cb(self, indata, frames, time, status):
-        self.recorder.write(indata, int(self.samplerate), self.stream.channels)
-        self.error = None
-        if self.callback_data is None:
-            self.callback_data = indata
-        else:
-            if len(indata[0]) != len(self.callback_data[0]):
+        try:
+            self.recorder.write(indata, int(self.samplerate), self.stream.channels)
+
+            self.error = None
+            if self.callback_data is None:
                 self.callback_data = indata
             else:
-                self.callback_data = np.concatenate((self.callback_data[-1048576:], indata))
+                if len(indata[0]) != len(self.callback_data[0]):
+                    self.callback_data = indata
+                else:
+                    self.callback_data = np.concatenate((self.callback_data[-1048576:], indata))
+        except Exception as e:
+            print('audvis realtime recorder', e)
 
 
 class RealtimeAnalyzer(Analyzer):
