@@ -51,9 +51,7 @@ def _stroke(obj, stroke_from, stroke_to, driver, indexes, weights):
     freq_step_calc = settings.freq_step_calc
     for i in range(points_count):
         index = indexes[i]
-        freq_from = index * freq_step_calc + settings.freqstart
-        freq_to = freq_from + settings.freqrange
-        val = driver(freq_from, freq_to, ch=settings.channel) * settings.factor * weights[i] + settings.add
+        val = lib.calc_driver_value(settings, driver, index, weights[i])
 
         if animtype == 'pressure':
             lib.set_value(pressures, i, val, operation)

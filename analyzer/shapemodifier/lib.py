@@ -1,6 +1,7 @@
 from random import Random
 
 from ...note_calculator import calculate_note
+import math
 
 
 def set_value(arr, index, value, operation):
@@ -31,7 +32,14 @@ def calc_driver_value(settings, driver, index, weight=1):
         send_kwargs = {}
         if settings.sound_sequence != '':
             send_kwargs['seq'] = settings.sound_sequence
-        driver_value = driver(freq_from, freq_to, ch=settings.channel, **send_kwargs)
+        if settings.sin_additive and settings.animtype in ('curve-radius', 'pressure', 'strength'):
+            driver_value = math.sin(driver(freq_from, freq_to, ch=settings.channel, additive=True,
+                                           **send_kwargs) * settings.sa_phase_multiplier + settings.sa_phase_offset) / 2 + .5
+        elif settings.sin_additive and settings.animtype in ('location-z', 'normal', 'location', 'track', 'curve-tilt'):
+            driver_value = math.sin(driver(freq_from, freq_to, ch=settings.channel, additive=True,
+                                           **send_kwargs) * settings.sa_phase_multiplier + settings.sa_phase_offset)
+        else:
+            driver_value = driver(freq_from, freq_to, ch=settings.channel, **send_kwargs)
     add = settings.add
     if weight == 0:
         return 0
