@@ -42,10 +42,10 @@ def build_expression(props, add=0.0, iterations_add=0):
     main_expr = "audvis({})".format(args)
     if props.factor != 1.0:
         main_expr += " * {:.6}".format(props.factor)
-    if add != 0.0:
-        main_expr = "{:.6} + {}".format(add * 1.0, main_expr)
 
     result = props.expression
     result = re.sub(r'\bindex\b', str(props.iteration), result)
     result = result.replace("audvis()", main_expr)
+    if add + props.add != 0.0:
+        result = "{:.6} + {}".format((add + props.add) * 1.0, result)
     return result
