@@ -27,9 +27,16 @@ class AudvisObjectShapemodifierProperties(bpy.types.PropertyGroup):
     freq_step: bpy.props.FloatProperty(name="Frequency Step", default=5.0, min=0)
     freq_step_calc: bpy.props.FloatProperty(name="Frequency Step Calculated", get=shapemodifier.calc_freq_step)
     animtype: bpy.props.EnumProperty(name="Animation Type", items=shapemodifier.animation_type_enum)
-    sin_additive: bpy.props.BoolProperty(name="Sinusoidal & Additive")
-    sa_phase_multiplier: bpy.props.FloatProperty(name="Sin&Add. Phase Multiplier", default=1.0)
-    sa_phase_offset: bpy.props.FloatProperty(name="Sin&Add. Phase Offset", default=0.0)
+    additive: bpy.props.EnumProperty(name="Additive", default="off", items=[
+        ('off', 'Off', ''),
+        ('on', 'On', ''),
+        ('sin', 'Sine from -1 to 1', ''),
+        ('sin2', 'Sine from 0 to 1', ''),
+        ('mod', 'Modulo', ''),
+    ])
+    additive_modulus: bpy.props.FloatProperty(name="Modulus", default=1.0)
+    additive_phase_multiplier: bpy.props.FloatProperty(name="Phase Multiplier", default=1.0)
+    additive_phase_offset: bpy.props.FloatProperty(name="Phase Offset", default=0.0)
     factor: bpy.props.FloatProperty(name="Factor", default=.1, precision=4)
     add: bpy.props.FloatProperty(name="Add", default=0, precision=4)
     use_vertexgroup: bpy.props.BoolProperty(name="Use Vertex Group", default=False,

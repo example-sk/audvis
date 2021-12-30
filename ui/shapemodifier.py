@@ -110,12 +110,14 @@ class AUDVIS_PT_shapemodifier(Panel):
             col.prop(props, "random_seed")
         if obj.type in ('MESH',) and props.animtype in ('normal', 'location-z', 'location', 'track'):
             col.prop(props, "use_vertexgroup")
-        if props.animtype in (
-                'normal', 'location-z', 'location', 'track', 'curve-radius', 'curve-tilt', 'pressure', 'strength'):
-            col.prop(props, "sin_additive")
-            if props.sin_additive:
-                col.prop(props, "sa_phase_multiplier")
-                col.prop(props, "sa_phase_offset")
+        row = col.row()
+        row.label(text="additive")
+        row.prop(props, "Additive", text="")
+        if props.additive == 'mod':
+            col.prop(props, "additive_modulus")
+        if props.additive in ('sin', 'sin2', 'mod'):
+            col.prop(props, "additive_phase_multiplier")
+            col.prop(props, "additive_phase_offset")
         if obj.type == 'GPENCIL':
             col.prop_search(props, "gpencil_layer", obj.data, "layers",
                             icon='OUTLINER_DATA_GP_LAYER')

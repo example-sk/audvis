@@ -11,39 +11,45 @@ def set_value(arr, index, value, operation):
         arr[index] = value
 
 
-def calc_driver_value(settings, driver, index, weight=1):
-    if settings.freq_seq_type == 'notes':
-        freq_from = calculate_note((index + settings.note_offset) * settings.note_step, settings.note_a4_freq)
-        freq_to = calculate_note((index + settings.note_offset + 1) * settings.note_step, settings.note_a4_freq)
-    elif settings.freq_seq_type == 'classic':
-        rng = settings.freqrange
-        freqstep = settings.freq_step_calc
-        freqstart = settings.freqstart
+def calc_driver_value(props, driver, index, weight=1):
+    if props.freq_seq_type == 'notes':
+        freq_from = calculate_note((index + props.note_offset) * props.note_step, props.note_a4_freq)
+        freq_to = calculate_note((index + props.note_offset + 1) * props.note_step, props.note_a4_freq)
+    elif props.freq_seq_type == 'classic':
+        rng = props.freqrange
+        freqstep = props.freq_step_calc
+        freqstart = props.freqstart
         freq_from = index * freqstep + freqstart
         freq_to = index * freqstep + rng + freqstart
 
-    if settings.freq_seq_type == 'midi':
-        driver_value = driver(midi=index + settings.midi.offset,
-                              ch=settings.midi.channel,
-                              track=settings.midi.track,
-                              file=settings.midi.file,
-                              device=settings.midi.device)
+    if props.freq_seq_type == 'midi':
+        driver_value = driver(midi=index + props.midi.offset,
+                              ch=props.midi.channel,
+                              track=props.midi.track,
+                              file=props.midi.file,
+                              device=props.midi.device)
     else:
         send_kwargs = {}
-        if settings.sound_sequence != '':
-            send_kwargs['seq'] = settings.sound_sequence
-        if settings.sin_additive and settings.animtype in ('curve-radius', 'pressure', 'strength'):
-            driver_value = math.sin(driver(freq_from, freq_to, ch=settings.channel, additive=True,
-                                           **send_kwargs) * settings.sa_phase_multiplier + settings.sa_phase_offset) / 2 + .5
-        elif settings.sin_additive and settings.animtype in ('location-z', 'normal', 'location', 'track', 'curve-tilt'):
-            driver_value = math.sin(driver(freq_from, freq_to, ch=settings.channel, additive=True,
-                                           **send_kwargs) * settings.sa_phase_multiplier + settings.sa_phase_offset)
+        if props.sound_sequence != '':
+            send_kwargs['seq'] = props.sound_sequence
+        if props.additive == 'off':
+            driver_value = driver(freq_from, freq_to, ch=props.channel, **send_kwargs)
         else:
-            driver_value = driver(freq_from, freq_to, ch=settings.channel, **send_kwargs)
-    add = settings.add
-    if weight == 0:
+            tmp_val = driver(freq_from, freq_to, ch=props.channel, additive=True, **send_kwargs)
+            if props.additive in ('sin', 'sin2'):
+                tmp_val = math.sin(tmp_val * props.additive_phase_multiplier + props.additive_phase_offset)
+                if props.additive == 'sin2':
+                    tmp_val = tmp_val / 2 + .5  # values range from 0 to 1
+            elif props.additive == 'mod':
+                tmp_val = (tmp_val * props.additive_phase_multiplier + props.additive_phase_offset) \
+                          % props.additive_modulus
+            elif props.additive == 'on':
+                pass
+            driver_value = tmp_val
+    add = props.add
+    if weight == 0 or props.factor == 0:
         return 0
-    val = (driver_value + add / settings.factor) * settings.factor * weight
+    val = (driver_value + add / props.factor) * props.factor * weight
     # print(index, val, freq_from, freq_to)
     return val
 
