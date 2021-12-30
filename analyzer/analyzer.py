@@ -137,7 +137,8 @@ class Analyzer:
                 fft_for_additive = fft
                 if self.additive_type == 'raw':
                     fft_for_additive = fft_before_fadeout
-                if type(prev_additive_fft) == list and len(prev_additive_fft) > ch:
+                if type(prev_additive_fft) == list and len(prev_additive_fft) > ch \
+                        and np.shape(prev_additive_fft[ch]) == np.shape(fft_for_additive):
                     self.additive_fft.append(np.add(prev_additive_fft[ch], fft_for_additive))
                 else:
                     self.additive_fft.append(fft_for_additive)
