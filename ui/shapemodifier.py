@@ -111,8 +111,8 @@ class AUDVIS_PT_shapemodifier(Panel):
         if obj.type in ('MESH',) and props.animtype in ('normal', 'location-z', 'location', 'track'):
             col.prop(props, "use_vertexgroup")
         row = col.row()
-        row.label(text="additive")
-        row.prop(props, "Additive", text="")
+        row.label(text="Additive")
+        row.prop(props, "additive", text="")
         if props.additive == 'mod':
             col.prop(props, "additive_modulus")
         if props.additive in ('sin', 'sin2', 'mod'):
