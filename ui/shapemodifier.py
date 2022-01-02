@@ -28,7 +28,7 @@ def animation_type_enum(self, context):
     if obj is None:
         return [('0', '', '')]
     ret = [
-        ("normal", "Normal", ""),
+        ("normal", "Normal from Object Center", ""),
         ("location-z", "Location Z", ""),
         ("location", "Location", "Set the vector by which you want to move the vertices"),
         ("track", "Track to Object", "Select an object to track it")
@@ -37,6 +37,9 @@ def animation_type_enum(self, context):
         ret.append(("weight", "Vertex Group Weight", ""))
         ret.append(("uv", "UV map", ""))
         ret.append(("vertcolor", "Vertex Color", ""))
+        ret.append(("vert-normal", "Vertex Normal (experimental)", "Can have wrong normal directions because it can't"
+                                                                   " be read from shape modifier's data, but only"
+                                                                   " directly from mesh vertices."))
     # !!! skin radius unsupported in shape keys
     # if obj.type == 'MESH' and len(obj.data.skin_vertices):
     #     ret.append(("skin-radius", "Skin Radius", ""))

@@ -112,6 +112,9 @@ class ShapeModifier(Analyzer):
             elif animtype == 'normal':
                 normal = shape_key_orig_data[i].co.normalized()
                 lib.location_setter.vector(locations, i, normal * val, operation)
+            elif animtype == 'vert-normal':
+                normal = obj.data.vertices[i].normal
+                lib.location_setter.vector(locations, i, normal * val, operation)
             elif animtype == 'track' and settings.track_object is not None:
                 lib.location_setter.track_to(locations, i, shape_key_orig_data[i].co, val, obj, settings, operation)
             elif animtype == 'curve-radius':
