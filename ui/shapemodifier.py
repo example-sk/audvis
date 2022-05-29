@@ -70,6 +70,15 @@ class AUDVIS_PT_shapemodifier(Panel):
         col.prop(context.scene.audvis, "shapemodifier_enable", text="")
 
     def draw(self, context):
+        col = self.layout.column(align=True)
+        col.alert = context.scene.audvis.shapemodifier_enable and not context.scene.render.use_lock_interface
+        col.prop(context.scene.render, 'use_lock_interface', text="Lock Interface while Rendering")
+        col.label(text='Warning: If "Lock Interface" is disabled,')
+        col.label(text='Blender CAN crash sometimes while')
+        col.label(text='rendering AudVis Shape Modifier.')
+        op = col.operator('wm.url_open', text="More info")
+        op.url = "https://developer.blender.org/T60094"
+
         obj = context.active_object or context.object
         if obj is None or obj.type not in ['MESH', 'CURVE', 'SURFACE', 'LATTICE', 'GPENCIL']:
             col = self.layout.column(align=True)
@@ -111,7 +120,7 @@ class AUDVIS_PT_shapemodifier(Panel):
         col.prop(props, "order")
         if props.order == 'rand':
             col.prop(props, "random_seed")
-        if obj.type in ('MESH',) and props.animtype in ('normal', 'location-z', 'location', 'track'):
+        if obj.type in ('MESH',) and props.animtype in ('normal', 'location-z', 'location', 'track', 'vert-normal'):
             col.prop(props, "use_vertexgroup")
         row = col.row()
         row.label(text="Additive")

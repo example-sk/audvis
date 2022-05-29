@@ -126,8 +126,8 @@ class ShapeModifier(Analyzer):
         if obj.type in ('CURVE', 'SURFACE'):
             shape_key_target_data.foreach_set('radius', radiuses)
             shape_key_target_data.foreach_set('tilt', tilts)
-        # obj.data.update_tag()
-        shape_key_target_data.update()
+        obj.data.update_tag()
+        # shape_key_target_data.update()
         if settings.is_baking and animtype not in ('uv', 'vertcolor') and obj.type != 'GPENCIL':
             for point in shape_key_target_data:
                 if animtype == 'curve-radius':
