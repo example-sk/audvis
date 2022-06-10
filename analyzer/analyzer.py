@@ -180,3 +180,21 @@ class Analyzer:
         for i in range(to):
             data[i] *= 1 - (to - i) / to * (self.fake_highpass_settings[1])
         return data
+
+    def _midi_multi_note_driver(self, low=None, high=None, ch=None, **kwargs):
+        midi_note = kwargs.get("midi", None)
+        multi_list = []
+        for i in range(midi_note[0], midi_note[1] + 1):
+            m_kwargs = kwargs.copy()
+            m_kwargs['midi'] = i
+            multi_list.append(self.driver(low, high, ch, **m_kwargs))
+        if len(midi_note) == 3 and midi_note[2] == 'sum':
+            return sum(multi_list)
+        elif len(midi_note) == 3 and midi_note[2] in ('avg', 'avg_nonzero'):
+            if midi_note[2] == 'avg_nonzero':
+                multi_list = [j for j in multi_list if j != 0]
+            if len(multi_list) == 0:
+                return 0
+            return sum(multi_list) / len(multi_list)
+        else:
+            return max(multi_list)

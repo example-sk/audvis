@@ -65,13 +65,10 @@ class MidiFileAnalyzer(Analyzer):
 
     def driver(self, low=None, high=None, ch=None, **kwargs):
         midi_note = kwargs.get("midi", None)
-        if (type(midi_note) is list or type(midi_note) is tuple) and len(midi_note) == 2:
-            multi_list = []
-            for i in range(midi_note[0], midi_note[1] + 1):
-                m_kwargs = kwargs.copy()
-                m_kwargs['midi'] = i
-                multi_list.append(self.driver(low, high, ch, **m_kwargs))
-            return max(multi_list)
+        if (type(midi_note) is list or type(midi_note) is tuple) and len(midi_note) in [2, 3]:
+            midi_note = kwargs.get("midi", None)
+            if (type(midi_note) is list or type(midi_note) is tuple) and len(midi_note) in [2, 3]:
+                return self._midi_multi_note_driver(low=None, high=None, ch=None, **kwargs)
         track = kwargs.get("track", None)
         file = kwargs.get("file", None)
         if self._last_data is None:

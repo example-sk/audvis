@@ -33,13 +33,9 @@ class MidiRealtimeAnalyzer(Analyzer):
         if self._last_data is None:
             return 0
         if "midi" in kwargs:
-            if (type(kwargs['midi']) is list or type(kwargs['midi']) is tuple) and len(kwargs['midi']) == 2:
-                multi_list = []
-                for i in range(kwargs['midi'][0], kwargs['midi'][1]+1):
-                    m_kwargs = kwargs.copy()
-                    m_kwargs['midi'] = i
-                    multi_list.append(self.driver(low, high, ch, **m_kwargs))
-                return max(multi_list)
+            midi_note = kwargs.get("midi", None)
+            if (type(midi_note) is list or type(midi_note) is tuple) and len(midi_note) in [2, 3]:
+                return self._midi_multi_note_driver(low=None, high=None, ch=None, **kwargs)
             else:
                 midi_note = int(kwargs['midi'])
         else:
