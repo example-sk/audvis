@@ -67,7 +67,7 @@ class MidiFileAnalyzer(Analyzer):
         midi_note = kwargs.get("midi", None)
         if (type(midi_note) is list or type(midi_note) is tuple) and len(midi_note) == 2:
             multi_list = []
-            for i in range(midi_note[0], midi_note[1]):
+            for i in range(midi_note[0], midi_note[1] + 1):
                 m_kwargs = kwargs.copy()
                 m_kwargs['midi'] = i
                 multi_list.append(self.driver(low, high, ch, **m_kwargs))

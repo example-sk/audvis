@@ -35,7 +35,7 @@ class MidiRealtimeAnalyzer(Analyzer):
         if "midi" in kwargs:
             if (type(kwargs['midi']) is list or type(kwargs['midi']) is tuple) and len(kwargs['midi']) == 2:
                 multi_list = []
-                for i in range(kwargs['midi'][0], kwargs['midi'][1]):
+                for i in range(kwargs['midi'][0], kwargs['midi'][1]+1):
                     m_kwargs = kwargs.copy()
                     m_kwargs['midi'] = i
                     multi_list.append(self.driver(low, high, ch, **m_kwargs))

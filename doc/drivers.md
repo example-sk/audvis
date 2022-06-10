@@ -28,7 +28,8 @@ Here are some simple expressions to show what you probably want to do:
 
 ## Expressions for MIDI File and MIDI Realtime analyzers:
 
-- **midi** - `audvis(midi=1)` - note 1. This parameters is needed if you want to use any midi
+- **midi** - `audvis(midi=1)` - note 1. This parameters is needed if you want to use any midi, or
+- **midi** - `audvis(midi=[40, 50])` - max. value from notes 40-50. This parameters is needed if you want to use any midi
 - **device** - `audvis(midi=1, device="MIDI Device 1")` - name of the device from the MIDI Realtime panel
 - **ch** - `audvis(midi=1, ch="1")` - midi channel
 - **file** - `audvis(midi=3, file='MyGreatSong.mid')` - file name from the MIDI File panel
