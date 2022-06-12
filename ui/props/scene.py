@@ -41,6 +41,13 @@ class AudvisSceneProperties(bpy.types.PropertyGroup):
     # channels
     channels: bpy.props.IntProperty(name="Channels Count", default=1, min=1, soft_max=32,
                                     description="Number of channels to perform the analysis. Useful with stereo sound.")
+    default_channel_sound: bpy.props.IntProperty(name="Default Sound Channel", default=1, min=1)
+    default_channel_midi: bpy.props.EnumProperty(name="Default MIDI Channel",
+                                                 default='all',
+                                                 items=[('all', 'All', '')] + [
+                                                     (str(i + 1), str(i + 1), "")
+                                                     for i in range(16)
+                                                 ])
 
     # spectrogram
     spectrogram: bpy.props.PointerProperty(type=spectrogram.AudvisSpectrogramProperties)
@@ -87,7 +94,7 @@ class AudvisSceneProperties(bpy.types.PropertyGroup):
         ('raw', "Raw", ""),
         ('use_fadeout', "Use Fadeout", ""),
     ])
-    value_additive_reset:bpy.props.BoolProperty(name="Reset Additive on First Frame", default=True)
+    value_additive_reset: bpy.props.BoolProperty(name="Reset Additive on First Frame", default=True)
     value_fadeout_speed: bpy.props.FloatProperty(name="Fade Out Speed", min=0, max=1, default=.1)
 
     # aud.Sound magic
@@ -221,9 +228,9 @@ class AudvisSceneProperties(bpy.types.PropertyGroup):
     example_driver_add: bpy.props.FloatProperty(name="Add", default=0.0)
     example_driver_factor: bpy.props.FloatProperty(name="Factor", default=1.0)
     example_driver_additive: bpy.props.EnumProperty(name="Additive", items=[
-        ("off", "Off",""),
-        ("rotation", "For rotation only",""),
-        ("all", "All",""),
+        ("off", "Off", ""),
+        ("rotation", "For rotation only", ""),
+        ("all", "All", ""),
     ], description="Use additive=True in the driver expression")
     example_randomize_location: bpy.props.BoolProperty(name="Randomize Location", default=False)
     example_randomize_rotation: bpy.props.FloatProperty(name="Randomize Rotation", default=0, min=0, max=1)

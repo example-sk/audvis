@@ -39,12 +39,18 @@ class AUDVIS_PT_audvis(Panel):
         layout = self.layout
 
         col = layout.column(align=True)
-        col.prop(context.scene, "sync_mode", text_ctxt="Set AV-sync if your sound is out of sync while playing")
+        row = col.row()
+        row.label(text="Sync Mode:")
+        row.prop(context.scene, "sync_mode", text="", text_ctxt="Set AV-sync if your sound is out of sync while playing")
 
         col = layout.column(align=True)
         col.prop(context.scene.audvis, "sample")
         col.prop(context.scene.audvis, "subframes")
         col.prop(context.scene.audvis, "channels")
+        col.prop(context.scene.audvis, "default_channel_sound")
+        row = col.row()
+        row.label(text="Default MIDI Channel")
+        row.prop(context.scene.audvis, "default_channel_midi", text="")
 
         col = layout.column(align=True)
         col.operator("audvis.forcereload", text="Reload AudVis", icon='FILE_REFRESH')

@@ -69,10 +69,13 @@ class AudVis:
 
     def driver(self, low=None, high=None, ch=None, **kwargs):
         start = time.time()
-        if "midi" not in kwargs and ch is None:
-            ch = 1
-        val = 0
         scene = bpy.context.scene
+
+        if "midi" not in kwargs and ch is None:
+            ch = scene.audvis.default_channel_sound
+        elif "midi" in kwargs and ch is None and scene.audvis.default_channel_midi != 'all':
+            ch = scene.audvis.default_channel_midi
+        val = 0
         seq = kwargs.get('seq')
         additive = kwargs.get('additive', False)
 
