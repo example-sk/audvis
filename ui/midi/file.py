@@ -1,121 +1,14 @@
 import sys
 
-import bpy
 from bpy.types import (Operator, Panel, UIList)
-from bpy_extras.io_utils import ImportHelper
+from .operators import (
+    midiFileRemove,
+    midiFileOpen,
+    midiTrackRemove,
+)
 
-from . import midi_file_baker
 from ..buttonspanel import (SequencerButtonsPanel, SequencerButtonsPanel_Npanel)
-
-
-def _get_selected_midi_file(context):
-    props = context.scene.audvis.midi_file
-    if 0 <= props.list_index < len(props.midi_files):
-        midifile = props.midi_files[props.list_index]
-        if midifile.deleted:
-            return None
-        return midifile
-    return None
-
-
-def _get_selected_midi_track(context):
-    props = context.scene.audvis.midi_file
-    midifile = _get_selected_midi_file(context)
-    if midifile is None:
-        return None
-    if 0 <= midifile.list_index < len(midifile.tracks):
-        track = midifile.tracks[midifile.list_index]
-        if track.deleted:
-            return None
-        return track
-    return None
-
-
-class AUDVIS_OT_midiFileOpen(Operator, ImportHelper):
-    bl_idname = "audvis.midi_file_open"
-    bl_label = "Add Midi File"
-    bl_description = ""
-
-    filter_glob: bpy.props.StringProperty(
-        default='*.mid',
-        options={'HIDDEN'}
-    )
-
-    strip_silent_start: bpy.props.BoolProperty(
-        name="Strip Silent Beginning of MIDI",
-        description="MIDI files use to have sometimes quite a long time from beginning to first note."
-                    " This cuts that empty, silent part.",
-        default=True
-    )
-
-    @classmethod
-    def poll(cls, context):
-        return sys.modules['audvis'].audvis.is_midi_realtime_supported()
-
-    def execute(self, context):
-        midi_file_baker.bake(context.scene, self.filepath, self.strip_silent_start)
-
-        return {'FINISHED'}
-
-
-class AUDVIS_OT_midiFileRemove(Operator):
-    bl_idname = "audvis.midi_file_remove"
-    bl_label = "Remove Midi File"
-    bl_description = ""
-
-    @classmethod
-    def poll(cls, context):
-        if not sys.modules['audvis'].audvis.is_midi_realtime_supported():
-            return False
-        if _get_selected_midi_file(context) is None:
-            return False
-        return True
-
-    def execute(self, context):
-        midifile = _get_selected_midi_file(context)
-        if midifile is not None \
-                and context.scene.animation_data \
-                and context.scene.animation_data.action is not None:
-            fcurves = context.scene.animation_data.action.fcurves
-            for fcurve in fcurves:
-                if fcurve.data_path.startswith(midifile.path_from_id()):
-                    fcurves.remove(fcurve)
-            midifile.deleted = True
-            midifile.enable = False
-            midifile.name = '_deleted'
-            midifile.filepath = ''
-            midifile.tracks.clear()
-            # TODO: try to really delete? Check if fcurves work how expected
-        return {'FINISHED'}
-
-
-class AUDVIS_OT_midiTrackRemove(Operator):
-    bl_idname = "audvis.midi_track_remove"
-    bl_label = "Remove Midi Track"
-    bl_description = ""
-
-    @classmethod
-    def poll(cls, context):
-        if not sys.modules['audvis'].audvis.is_midi_realtime_supported():
-            return False
-        if _get_selected_midi_track(context) is None:
-            return False
-        return True
-
-    def execute(self, context):
-        track = _get_selected_midi_track(context)
-        if track is not None \
-                and context.scene.animation_data \
-                and context.scene.animation_data.action is not None:
-            fcurves = context.scene.animation_data.action.fcurves
-            for fcurve in fcurves:
-                if fcurve.data_path.startswith(track.path_from_id()):
-                    fcurves.remove(fcurve)
-            track.deleted = True
-            track.enable = False
-            track.name = '_deleted'
-            # TODO: try to really delete? Check if fcurves work how expected
-        return {'FINISHED'}
+from .utils import (get_selected_midi_file, get_selected_midi_track)
 
 
 class AUDVIS_UL_midiTrackList(UIList):
@@ -184,7 +77,7 @@ class AUDVIS_PT_midiFile(Panel):
         row = col.row()
         row.operator('audvis.midi_file_open')
         row.operator('audvis.midi_file_remove')
-        midifile = _get_selected_midi_file(context)
+        midifile = get_selected_midi_file(context)
         if midifile is not None:
             col = layout.column(align=True)
             col.prop(midifile, "name")
@@ -198,7 +91,7 @@ class AUDVIS_PT_midiFile(Panel):
             self._draw_track_info(col, context)
 
     def _draw_track_info(self, col, context):
-        track = _get_selected_midi_track(context)
+        track = get_selected_midi_track(context)
         if track is None:
             return
         col.prop(track, "name")
@@ -218,7 +111,7 @@ classes = [
     AUDVIS_UL_midiTrackList,
     AUDVIS_PT_midiFileNpanel,
     AUDVIS_PT_midiFileScene,
-    AUDVIS_OT_midiFileOpen,
-    AUDVIS_OT_midiFileRemove,
-    AUDVIS_OT_midiTrackRemove,
+    midiFileOpen.AUDVIS_OT_midiFileOpen,
+    midiFileRemove.AUDVIS_OT_midiFileRemove,
+    midiTrackRemove.AUDVIS_OT_midiTrackRemove,
 ]
