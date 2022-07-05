@@ -37,10 +37,10 @@ class AUDVIS_OT_spectrogrambake(Operator):
         self.disable_after_bake = context.scene.audvis.spectrogram_meta.last_disable_after_bake
         return context.window_manager.invoke_props_dialog(self)
 
-    def clear_old_data(self, context):
-        pattern = os.path.join(bpy.path.abspath(self.dirname), 'audvis-spect-*.png')
-        for file in glob.glob(pattern):
-            os.unlink(file)
+    # def clear_old_data(self, context):
+    #     pattern = os.path.join(bpy.path.abspath(self.dirname), 'audvis-spect-*.png')
+    #     for file in glob.glob(pattern):
+    #         os.unlink(file)
 
     def draw(self, context):
         col = self.layout.column()
@@ -144,7 +144,7 @@ class AUDVIS_OT_spectrogrambake(Operator):
         self.timer = context.window_manager.event_timer_add(.0000001, window=context.window)
         context.workspace.status_text_set("AudVis: Baking Shape Modifier")
         context.window_manager.modal_handler_add(self)
-        self.clear_old_data(context)
+        # self.clear_old_data(context)
         return {'RUNNING_MODAL'}
 
     def _get_all_spect_props(self, context):
