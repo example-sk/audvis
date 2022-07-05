@@ -25,6 +25,7 @@ class AUDVIS_OT_spectrogrambake(Operator):
     use_subdirs: bpy.props.BoolProperty(name="Use Subdirectories for Each Image", default=True)
     disable_after_bake: bpy.props.BoolProperty(name="Disable After Baking", default=True,
                                                description="Disable spectrogram after end of baking process")
+    show_directory: bpy.props.BoolProperty(name="Show Directory", default=True)
 
     @classmethod
     def poll(self, context):
@@ -46,6 +47,7 @@ class AUDVIS_OT_spectrogrambake(Operator):
         col.prop(self, 'dirname')
         col.prop(self, 'use_subdirs')
         col.prop(self, 'disable_after_bake')
+        col.prop(self, 'show_directory')
         col = self.layout.column()
         col.alert = True
         col.label(text="After baking, you have to load the image")
@@ -113,7 +115,22 @@ class AUDVIS_OT_spectrogrambake(Operator):
         os.makedirs(os.path.dirname(f), exist_ok=True)
         image.save()
 
+    def _show_directory(self):
+        import sys
+        import subprocess
+        abs_dir = bpy.path.abspath(self.dirname)
+        os.makedirs(abs_dir, exist_ok=True)
+
+        if sys.platform == 'darwin':
+            subprocess.check_call(['open', '--', abs_dir])
+        elif sys.platform.startswith('linux'):
+            subprocess.check_call(['xdg-open', abs_dir])
+        elif sys.platform == 'win32':
+            subprocess.check_call(['explorer', abs_dir])
+
     def execute(self, context):
+        if self.show_directory:
+            self._show_directory()
         context.scene.audvis.spectrogram_meta.last_dirname = self.dirname
         context.scene.audvis.spectrogram_meta.last_use_subdirs = self.use_subdirs
         context.scene.audvis.spectrogram_meta.last_disable_after_bake = self.disable_after_bake
