@@ -4,6 +4,18 @@ from .midi import AudvisMidiGeneratorsProperties
 from .. import spectrogram
 
 
+class AudvisSpectrogramMetaProperties(bpy.types.PropertyGroup):
+    enable: bpy.props.BoolProperty(name="Spectrogram Enable", default=True)
+    mode: bpy.props.EnumProperty(name="Spectrogram Mode", items=[
+        ("single", "Single", "Only one image (old behavior)"),
+        ("multi", "Multiple",
+         "Create multiple spectrogram images (warning: having too many spectrogram images can be slow)"),
+    ])
+    index: bpy.props.IntProperty(min=0)
+    last_dirname: bpy.props.StringProperty(name="Last Bake Directory", subtype="DIR_PATH", default="//audvis-spectrogram/")
+    last_use_subdirs: bpy.props.BoolProperty(name="Last Use Subdirs", default=True)
+    last_disable_after_bake: bpy.props.BoolProperty(name="Last Disable after Baking", default=True)
+
 class AudvisSpectrogramProperties(bpy.types.PropertyGroup):
     enable: bpy.props.BoolProperty(name="Enable", default=False)
     channel: bpy.props.IntProperty(name="Sound Channel", default=1, min=1, soft_max=32)
@@ -35,6 +47,8 @@ class AudvisSpectrogramProperties(bpy.types.PropertyGroup):
                                  " counted from the bottom of the image."),
         ("snapshot", "Snapshot", "Each pixel is set from the latest data")
     ], default="rolling")
+    image: bpy.props.PointerProperty(type=bpy.types.Image)
+    factor_float: bpy.props.FloatProperty(name="Factor", default=1)
     factor: bpy.props.FloatVectorProperty(name="Factor RGB", size=3, soft_min=-1, soft_max=1, default=(1, 1, 1))
     bake_path: bpy.props.StringProperty(name="Bake Path", default="//audvis-spectrogram/", subtype='DIR_PATH')
     clear_on_first_frame: bpy.props.BoolProperty(name="Clear on First Frame", default=True)

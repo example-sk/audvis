@@ -51,6 +51,8 @@ class AudvisSceneProperties(bpy.types.PropertyGroup):
 
     # spectrogram
     spectrogram: bpy.props.PointerProperty(type=spectrogram.AudvisSpectrogramProperties)
+    spectrogram_meta: bpy.props.PointerProperty(type=spectrogram.AudvisSpectrogramMetaProperties)
+    spectrograms: bpy.props.CollectionProperty(type=spectrogram.AudvisSpectrogramProperties)
 
     # animation nodes
     animation_nodes: bpy.props.PointerProperty(type=animationnodes.AudvisAnimationnodesProperties)

@@ -14,21 +14,41 @@ class SpectrogramGenerator(Analyzer):
         pass
 
     def on_pre_frame(self, scene, frame):
-        if scene.audvis.spectrogram.enable:
+        if scene.audvis.spectrogram_meta.mode == 'single' and scene.audvis.spectrogram.enable:
+            self.modify(scene)
+        elif scene.audvis.spectrogram_meta.mode == 'multi' and scene.audvis.spectrogram_meta.enable:
             self.modify(scene)
 
     def modify(self, scene):
-        name = 'AudVis Spectrogram'
-        spect_props = scene.audvis.spectrogram
+        if scene.audvis.spectrogram_meta.mode == 'single':
+            spect_props = scene.audvis.spectrogram
+            if spect_props.image is None:
+                name = 'AudVis Spectrogram'
+                if name not in bpy.data.images:
+                    height = spect_props.height
+                    if spect_props.mode == 'one-big':
+                        height = scene.frame_end - scene.frame_start + 1
+                    img = bpy.data.images.new(name=name, width=spect_props.width, height=height)
+                else:
+                    img = bpy.data.images[name]
+                spect_props.image = img
+            self._submodify(scene, spect_props, spect_props.image)
+        else:
+            for spect_props in scene.audvis.spectrograms:
+                if spect_props.enable:
+                    self._submodify(scene, spect_props, spect_props.image)
+
+    def _submodify(self, scene, spect_props, img):
+        if img is None:
+            return
+        if not img.has_data:  # loaded .blend file, missing img file
+            img.source = 'GENERATED'
+            img.scale(1, 1)
         height = spect_props.height
         if spect_props.mode == 'one-big':
             height = scene.frame_end - scene.frame_start + 1
-        if name not in bpy.data.images:
-            img = bpy.data.images.new(name=name, width=spect_props.width, height=height)
-        else:
-            img = bpy.data.images[name]
-            if img.size[0] != spect_props.width or img.size[1] != height:
-                img.scale(spect_props.width, height)
+        if img.size[0] != spect_props.width or img.size[1] != height:
+            img.scale(spect_props.width, height)
         mod = spect_props.skip_frames + 1
         if spect_props.skip_frames > 0 and (scene.frame_current_final - scene.frame_start) % mod != 0:
             return
@@ -58,7 +78,7 @@ class SpectrogramGenerator(Analyzer):
             freq_from = i / 4
             freq_from += spect_props.freqstart
             freq_from *= freq_step_calc
-            val = calc_driver_value(spect_props, self._driver, int(i/4))
+            val = spect_props.factor_float * calc_driver_value(spect_props, self._driver, int(i / 4))
             if operation in ['sub', 'add']:
                 if operation == 'sub':
                     val *= -1

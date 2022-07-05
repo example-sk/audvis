@@ -18,6 +18,7 @@ classes = [
               party.AudvisPartyProperties,
           ] + midi.classes + [
               spectrogram.AudvisSpectrogramProperties,
+              spectrogram.AudvisSpectrogramMetaProperties,
               spreaddrivers.AudvisSceneSpreaddriversProperties,
               scene.AudvisSceneProperties,  # all prop groups in scene need to be above this line
               sequence.AudvisSequenceProperties,
