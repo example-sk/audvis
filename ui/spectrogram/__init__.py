@@ -77,7 +77,8 @@ class AUDVIS_PT_spectrogram(Panel):
                 # col.prop(selected_spectrogram, 'name')
                 col.prop(selected_spectrogram.image, 'name', text="Image Name", icon="IMAGE")
                 col.prop(selected_spectrogram.image, 'file_format', text="Format")
-                col.prop(selected_spectrogram.image, 'use_half_precision')
+                if hasattr(selected_spectrogram.image, "use_half_precision"):
+                    col.prop(selected_spectrogram.image, 'use_half_precision')
                 self._draw_spectrogram(context, selected_spectrogram)
         col = self.layout.column(align=True)
         col.separator()

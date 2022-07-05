@@ -110,6 +110,7 @@ class AUDVIS_OT_spectrogrambake(Operator):
             ext = image.file_format.lower()
         f = os.path.join(dirname, image_name + "." + ext)
         image.filepath_raw = f
+        os.makedirs(os.path.dirname(f), exist_ok=True)
         image.save()
 
     def execute(self, context):
