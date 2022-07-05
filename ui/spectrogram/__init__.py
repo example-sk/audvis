@@ -79,6 +79,9 @@ class AUDVIS_PT_spectrogram(Panel):
                 col.prop(selected_spectrogram.image, 'file_format', text="Format")
                 col.prop(selected_spectrogram.image, 'use_half_precision')
                 self._draw_spectrogram(context, selected_spectrogram)
+        col = self.layout.column(align=True)
+        col.separator()
+        col.operator('audvis.spectrogram_bake')
 
     def _draw_spectrogram(self, context, spect_props):
         col = self.layout.column(align=True)
@@ -135,10 +138,7 @@ class AUDVIS_PT_spectrogram(Panel):
         col.prop(spect_props, "clear_on_first_frame")
         col.prop(spect_props, "color")
 
-        if spect_props.enable:
-            col = self.layout.column(align=True)
-            col.separator()
-            col.operator('audvis.spectrogram_bake')
+
 
 
 class AUDVIS_PT_spectrogramScene(AUDVIS_PT_spectrogram, SequencerButtonsPanel):

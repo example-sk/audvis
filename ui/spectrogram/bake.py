@@ -11,7 +11,7 @@ from bpy.types import (
 
 class AUDVIS_OT_spectrogrambake(Operator):
     bl_idname = "audvis.spectrogram_bake"
-    bl_label = "Bake Spectrogram"
+    bl_label = "Bake Spectrograms"
     bl_description = "Exports the image sequence"
 
     return_frame = -1
