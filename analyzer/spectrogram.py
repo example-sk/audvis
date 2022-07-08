@@ -98,7 +98,7 @@ class SpectrogramGenerator(Analyzer):
             img.pixels = copy
         else:
             img.pixels[range_from:range_to] = copy
-        img.update()
+        img.update_tag()
 
 
 # copy of analyzer/shapemodifier/lib.py - calc_driver_value
