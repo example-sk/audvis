@@ -12,9 +12,10 @@ class AudvisSpectrogramMetaProperties(bpy.types.PropertyGroup):
          "Create multiple spectrogram images (warning: having too many spectrogram images can be slow)"),
     ])
     index: bpy.props.IntProperty(min=0)
-    last_dirname: bpy.props.StringProperty(name="Last Bake Directory", subtype="DIR_PATH", default="//audvis-spectrogram/")
-    last_use_subdirs: bpy.props.BoolProperty(name="Last Use Subdirs", default=True)
-    last_disable_after_bake: bpy.props.BoolProperty(name="Last Disable after Baking", default=True)
+    bake_dirname: bpy.props.StringProperty(name="Bake Directory", subtype="DIR_PATH", default="//audvis-spectrogram/")
+    bake_use_subdirs: bpy.props.BoolProperty(name="Use Subdirs", default=True)
+    bake_disable_after: bpy.props.BoolProperty(name="Disable after Baking", default=True)
+    bake_show_directory: bpy.props.BoolProperty(name="Show Directory", default=True)
 
 class AudvisSpectrogramProperties(bpy.types.PropertyGroup):
     enable: bpy.props.BoolProperty(name="Enable", default=False)

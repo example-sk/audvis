@@ -83,8 +83,6 @@ class AUDVIS_PT_spectrogram(Panel):
                     col.prop(selected_spectrogram.image, 'use_half_precision')
                 self._draw_spectrogram(context, selected_spectrogram)
         col = self.layout.column(align=True)
-        col.separator()
-        col.operator('audvis.spectrogram_bake')
 
     def _draw_spectrogram(self, context, spect_props):
         col = self.layout.column(align=True)

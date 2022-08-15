@@ -4,7 +4,10 @@ import os
 import bpy
 from bpy.types import (
     Operator,
+    Panel,
 )
+
+from ..buttonspanel import (SequencerButtonsPanel_Update, SequencerButtonsPanel_Npanel, SequencerButtonsPanel)
 
 
 # TODO: self.report({'INFO'},"This ma take some time")
@@ -31,27 +34,10 @@ class AUDVIS_OT_spectrogrambake(Operator):
     def poll(self, context):
         return True
 
-    def invoke(self, context, event):
-        self.dirname = context.scene.audvis.spectrogram_meta.last_dirname
-        self.use_subdirs = context.scene.audvis.spectrogram_meta.last_use_subdirs
-        self.disable_after_bake = context.scene.audvis.spectrogram_meta.last_disable_after_bake
-        return context.window_manager.invoke_props_dialog(self)
-
     # def clear_old_data(self, context):
     #     pattern = os.path.join(bpy.path.abspath(self.dirname), 'audvis-spect-*.png')
     #     for file in glob.glob(pattern):
     #         os.unlink(file)
-
-    def draw(self, context):
-        col = self.layout.column()
-        col.prop(self, 'dirname')
-        col.prop(self, 'use_subdirs')
-        col.prop(self, 'disable_after_bake')
-        col.prop(self, 'show_directory')
-        col = self.layout.column()
-        col.alert = True
-        col.label(text="After baking, you have to load the image")
-        col.label(text="sequence manually where needed.")
 
     def modal(self, context, event):
         if event.type == 'TIMER':
@@ -131,9 +117,6 @@ class AUDVIS_OT_spectrogrambake(Operator):
     def execute(self, context):
         if self.show_directory:
             self._show_directory()
-        context.scene.audvis.spectrogram_meta.last_dirname = self.dirname
-        context.scene.audvis.spectrogram_meta.last_use_subdirs = self.use_subdirs
-        context.scene.audvis.spectrogram_meta.last_disable_after_bake = self.disable_after_bake
         scene = context.scene
         bpy.ops.screen.animation_cancel()
         self.return_frame = scene.frame_current
@@ -162,6 +145,45 @@ class AUDVIS_OT_spectrogrambake(Operator):
             return []
 
 
+class AUDVIS_PT_spectrogrambake(Panel, SequencerButtonsPanel_Update):
+    bl_label = "Bake Spectrogram"
+
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def draw_header(self, context):
+        pass
+
+    def draw(self, context):
+        props = context.scene.audvis.spectrogram_meta
+        col = self.layout.column()
+        col.prop(props, 'bake_dirname')
+        col.prop(props, 'bake_use_subdirs')
+        col.prop(props, 'bake_disable_after')
+        col.prop(props, 'bake_show_directory')
+        col = self.layout.column()
+        col.alert = True
+        col.label(text="After baking, you have to load the image")
+        col.label(text="sequence manually where needed.")
+        col.separator()
+        btn = col.operator('audvis.spectrogram_bake')
+        btn.dirname = props.bake_dirname
+        btn.use_subdirs = props.bake_use_subdirs
+        btn.disable_after_bake = props.bake_disable_after
+        btn.show_directory = props.bake_show_directory
+
+
+class AUDVIS_PT_spectrogrambakeScene(AUDVIS_PT_spectrogrambake, SequencerButtonsPanel):
+    bl_parent_id = "AUDVIS_PT_spectrogramScene"
+
+
+class AUDVIS_PT_spectrogrambakeNpanel(AUDVIS_PT_spectrogrambake, SequencerButtonsPanel_Npanel):
+    bl_parent_id = "AUDVIS_PT_spectrogramNpanel"
+
+
 classes = [
     AUDVIS_OT_spectrogrambake,
+    AUDVIS_PT_spectrogrambakeNpanel,
+    AUDVIS_PT_spectrogrambakeScene,
 ]

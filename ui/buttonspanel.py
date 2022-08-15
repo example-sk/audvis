@@ -19,3 +19,8 @@ class SequencerButtonsPanel_Npanel:
     @classmethod
     def poll(cls, context):
         pass
+
+
+class SequencerButtonsPanel_Update:
+    """Use for subpanels"""
+    pass
