@@ -126,11 +126,15 @@ class Analyzer:
             fft_before_fadeout = fft
             # TODO: how to use this? As a result, or something like audvis(10, 100, falloff=True) ?
             if self.fadeout_type != 'off' and (prev_fft is not None) and (0 <= ch < len(prev_fft)):
-                if self.fadeout_type == 'exponential':
-                    tmp = prev_fft[ch] * (1 - self.fadeout_speed)
+                if self.fadeout_type == 'fft':
+                    # https://chromium.googlesource.com/chromium/blink/+/refs/heads/main/Source/modules/webaudio/RealtimeAnalyser.cpp#186
+                    fft = prev_fft[ch] * (1 - self.fadeout_speed) + fft * self.fadeout_speed
                 else:
-                    tmp = prev_fft[ch] - 10 * self.fadeout_speed
-                fft = np.maximum(tmp, fft)
+                    if self.fadeout_type == 'exponential':
+                        tmp = prev_fft[ch] * (1 - self.fadeout_speed)
+                    else:
+                        tmp = prev_fft[ch] - 10 * self.fadeout_speed
+                    fft = np.maximum(tmp, fft)
             if self.additive_type != 'off':
                 if self.is_first_frame and self.additive_reset_onfirstframe:
                     prev_additive_fft = None

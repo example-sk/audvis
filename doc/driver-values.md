@@ -23,4 +23,6 @@
     - **Off** - don't fade out
     - **Linear** - returns higher value of "previous frame value - **Fade Out Speed**" or "current value"
     - **Exponential** - returns higher value of "previous frame value * (1 - **Fade Out Speed**)" or "current value"
+    - **Natural** - similar to exponential, but much more natural results. The formula is 
+      - `previous_fft * (1 - fadeout_speed) + fft * fadeout_speed`
     - warning: if you jump between frames, the results can be inconsistent
