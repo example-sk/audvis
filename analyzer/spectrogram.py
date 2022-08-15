@@ -45,10 +45,14 @@ class SpectrogramGenerator(Analyzer):
             img.source = 'GENERATED'
             img.scale(1, 1)
         height = spect_props.height
+        img_width = spect_props.width
         if spect_props.mode == 'one-big':
             height = scene.frame_end - scene.frame_start + 1
-        if img.size[0] != spect_props.width or img.size[1] != height:
-            img.scale(spect_props.width, height)
+            if spect_props.onebig_force_vertical:
+                height *= spect_props.width
+                img_width = 1
+        if img.size[0] != img_width or img.size[1] != height:
+            img.scale(img_width, height)
         mod = spect_props.skip_frames + 1
         if spect_props.skip_frames > 0 and (scene.frame_current_final - scene.frame_start) % mod != 0:
             return
@@ -56,6 +60,8 @@ class SpectrogramGenerator(Analyzer):
             img.pixels = list(spect_props.color) * img.size[0] * img.size[1]
         width = img.size[0] * 4
         if spect_props.mode == 'one-big':
+            if spect_props.onebig_force_vertical:
+                width = spect_props.width * 4
             line = scene.frame_current - scene.frame_start
             range_from = line * width
             range_to = line * width + width

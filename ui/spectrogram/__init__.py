@@ -15,6 +15,7 @@ from .operators import (
     spectrogramDuplicate,
     spectrogramRemove,
     spectrogramSingleToMulti,
+    # spectrogramMakeParticles,
 )
 
 import string
@@ -71,6 +72,7 @@ class AUDVIS_PT_spectrogram(Panel):
             row.operator("audvis.spectrogram_add", text="Add")
             row.operator("audvis.spectrogram_duplicate", text="Duplicate")
             row.operator("audvis.spectrogram_remove", text="Remove")
+            # col.operator("audvis.spectrogram_make_particles")
             if context.scene.audvis.spectrogram_meta.index < len(context.scene.audvis.spectrograms):
                 col = self.layout.column(align=True)
                 selected_spectrogram = context.scene.audvis.spectrograms[context.scene.audvis.spectrogram_meta.index]
@@ -104,7 +106,9 @@ class AUDVIS_PT_spectrogram(Panel):
         col.prop(spect_props, "mode")
         col.prop(spect_props, "width")
         rows = 1
-        if spect_props.mode != 'one-big':
+        if spect_props.mode == 'one-big':
+            col.prop(spect_props, "onebig_force_vertical")
+        else:
             col.prop(spect_props, "height")
         if spect_props.mode == 'snapshot':
             rows = spect_props.height
@@ -140,8 +144,6 @@ class AUDVIS_PT_spectrogram(Panel):
         col.prop(spect_props, "color")
 
 
-
-
 class AUDVIS_PT_spectrogramScene(AUDVIS_PT_spectrogram, SequencerButtonsPanel):
     bl_parent_id = "AUDVIS_PT_audvisScene"
 
@@ -158,4 +160,5 @@ classes = bake.classes + [
     spectrogramAdd.AUDVIS_OT_spectrogramAdd,
     spectrogramDuplicate.AUDVIS_OT_spectrogramDuplicate,
     spectrogramSingleToMulti.AUDVIS_OT_spectrogramSingleToMulti,
+    # spectrogramMakeParticles.AUDVIS_OT_spectrogramMakeParticles,
 ]

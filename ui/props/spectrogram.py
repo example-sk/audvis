@@ -47,6 +47,7 @@ class AudvisSpectrogramProperties(bpy.types.PropertyGroup):
                                  " counted from the bottom of the image."),
         ("snapshot", "Snapshot", "Each pixel is set from the latest data")
     ], default="rolling")
+    onebig_force_vertical: bpy.props.BoolProperty("Vertical Only", default=False, description="Use with particle textures")
     image: bpy.props.PointerProperty(type=bpy.types.Image)
     factor_float: bpy.props.FloatProperty(name="Factor", default=1)
     factor: bpy.props.FloatVectorProperty(name="Factor RGB", size=3, soft_min=-1, soft_max=1, default=(1, 1, 1))
