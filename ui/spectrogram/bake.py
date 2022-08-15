@@ -112,7 +112,8 @@ class AUDVIS_OT_spectrogrambake(Operator):
         elif sys.platform.startswith('linux'):
             subprocess.check_call(['xdg-open', abs_dir])
         elif sys.platform == 'win32':
-            subprocess.check_call(['explorer', abs_dir])
+            os.startfile(abs_dir)
+            # subprocess.check_call(['explorer', abs_dir])
 
     def execute(self, context):
         if self.show_directory:
