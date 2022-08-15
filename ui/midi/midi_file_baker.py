@@ -1,6 +1,8 @@
 import os
 import random
 import re
+import math
+import bpy
 
 
 def _testing_mergetracks(mid):
@@ -48,6 +50,33 @@ def _generate_track_name(orig_track_name, track_index, midifile):
     return name
 
 
+def _create_fcurves_in_order(scene, track_item, midifile, track):
+    tmp_list = []
+    if scene.animation_data is None:
+        scene.animation_data_create()
+    if scene.animation_data.action is None:
+        scene.animation_data.action = bpy.data.actions.new(name=scene.name)
+    # create the fcurves in nice order:
+    for msg in track['msgs']:
+        if msg.type in ('note_on', 'note_off'):
+            key = "ch{}_n{}".format(msg.channel + 1, msg.note)
+            tmp_item = (
+                msg.channel,
+                msg.note,
+                key,
+            )
+            if tmp_item not in tmp_list:
+                tmp_list.append(tmp_item)
+    tmp_list.sort()
+    for tmp in tmp_list:
+        keyframe_key = '["{}"]'.format(tmp[2])
+        track_item[tmp[2]] = 0.0
+        scene.animation_data.action.fcurves.new(data_path=track_item.path_from_id() + keyframe_key,
+                                                index=-1,
+                                                action_group=midifile.name + ' | ' + track_item.name)
+        track_item.keyframe_insert(keyframe_key, frame=-1, group=midifile.name)
+
+
 def bake(scene, filepath: str, strip_silent_start: bool):
     import mido
 
@@ -69,6 +98,9 @@ def bake(scene, filepath: str, strip_silent_start: bool):
     midifile.time_length = mid.length
     midifile.fps_when_loaded = fps
     overall_offset_time = 0.0
+    # helper_object = bpy.data.objects.new(name=midifile.name)
+    # helper_object.animation_data_create()
+    # scene.collection.objects.link(helper_object)
     if strip_silent_start:
         timer = 0.0
         for msg in mid:
@@ -76,15 +108,22 @@ def bake(scene, filepath: str, strip_silent_start: bool):
             if msg.type == 'note_on':
                 overall_offset_time = -timer
                 break
+    # nla_action = bpy.data.actions.new(name=midifile.name)
+    # nla_tracks = {}
     for track_index, track in enumerate(_testing_mergetracks(mid)):
         track_item = midifile.tracks.add()
         name = _generate_track_name(track['name'], track_index, midifile)
         track_item.name = name
         counter = 0
+        _create_fcurves_in_order(scene, track_item, midifile, track)
         for msg in track['msgs']:
             if msg.type in ('note_on', 'note_off'):
                 counter += 1
                 key = "ch{}_n{}".format(msg.channel + 1, msg.note)
+                # nla_key = track_item.name + '-' + key
+                # if nla_key not in nla_tracks:
+                #     nla_track = nla_tracks[nla_key] = helper_object.animation_data.nla_tracks.new()
+                #     nla_track.name = track_item.name + " - " + key
                 keyframe_key = '["{}"]'.format(key)
                 if key not in track_item:
                     track_item[key] = 0.0
@@ -93,7 +132,16 @@ def bake(scene, filepath: str, strip_silent_start: bool):
                 item_offset = 0
                 if msg.type == 'note_on':
                     value = msg.velocity
+                    # frame_start = (overall_offset_time + msg.time) * fps
+                    # try:
+                    #     nla_strip = nla_tracks[nla_key].strips.new(name='note', start=math.ceil(frame_start),
+                    #                                                action=nla_action)
+                    #     nla_strip.name = key
+                    #     nla_strip.frame_start = frame_start
+                    # except:
+                    #     pass  # TODO: midi files tend to have double initial NOTE_ON. Why? Am I parsing it wrong?
                 else:
+                    # nla_tracks[nla_key].strips[-1].frame_end = (overall_offset_time + msg.time) * fps
                     item_offset = -.01
                     value = 0.0
                 track_item[key] = value
