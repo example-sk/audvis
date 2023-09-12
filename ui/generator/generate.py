@@ -122,7 +122,6 @@ class Generator:
         empty = None
         if self.conf.example_lattice:
             lattice = self.make_lattice()
-            self.obj_add_to_group(lattice)
         if self.conf.example_empty:
             empty = bpy.data.objects.new('AudVisExampleEmpty', None)
             if hasattr(empty, "empty_display_type"):  # blender 2.80
@@ -213,6 +212,8 @@ class Generator:
                             add[2] + self.size * k - ((zcount - 1) / 2) * self.size,
                         )
                         obj.rotation_euler[2] = math.atan2(obj.location[1], obj.location[0])
+                    elif self.conf.example_shape == 'point':
+                        obj.location = bpy.context.scene.cursor.location
                     else:
                         obj.location = (
                             add[0] + self.size * i - ((xcount - 1) / 2) * self.size,
@@ -346,15 +347,13 @@ class Generator:
         lattice.points_v = 5
         lattice.points_w = 5
         lattice = bpy.data.objects.new("AudVisExampleLattice", lattice)
+        self.obj_add_to_group(lattice)
         lattice.data.use_outside = True
-        override = {
-            'window': self.context.window,
-            'screen': self.context.screen,
-            'area': self.context.area,
-            'object': lattice,
-        }
-        bpy.ops.object.shape_key_add(override)
-        bpy.ops.object.shape_key_add(override)
+        old_active = bpy.context.view_layer.objects.active
+        bpy.context.view_layer.objects.active = lattice
+        bpy.ops.object.shape_key_add()
+        bpy.ops.object.shape_key_add()
+        bpy.context.view_layer.objects.active = old_active
         d = lattice.active_shape_key.driver_add('value')
         d.driver.expression = 'audvis(10,1000)/10'
         lattice.scale = (

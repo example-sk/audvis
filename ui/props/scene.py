@@ -274,6 +274,7 @@ class AudvisSceneProperties(bpy.types.PropertyGroup):
         ("grid", "Grid", "Objects will be placed in a grid"),
         ("circle", "Circle", "Objects will be placed around a circle"),
         ("curve", "Curve", "Objects will be placed along the selected Curve object"),
+        ("point", "Single Point", "All objects will be at the same place")
     ])
     example_circle_radius: bpy.props.FloatProperty(name="Inner Radius", default=4,
                                                    description="Inner circle radius")
