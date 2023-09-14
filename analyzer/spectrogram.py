@@ -72,7 +72,7 @@ class SpectrogramGenerator(Analyzer):
         rows_count = 1
         if spect_props.mode == 'snapshot':
             rows_count = height
-            copy = [1.0] * (4 * width * height)
+            copy = [1.0] * (width * height)
         else:
             copy = list(img.pixels[range_from:range_to])
         factor = spect_props.factor
