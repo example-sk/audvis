@@ -15,7 +15,11 @@ def run(scene, conts):
         gpencil = bpy.data.grease_pencils.new(name=NAME)
         gpencil.pixel_factor = 20
         obj = bpy.data.objects.new(name=NAME, object_data=gpencil)
-        bpy.ops.object.material_slot_add({'object': obj})
+        if hasattr(bpy.context, 'temp_override'):  # blender 3.2 and higher
+            with bpy.context.temp_override(object=obj):
+                bpy.ops.object.material_slot_add()
+        else:  # blender 3.1 and lower
+            bpy.ops.object.material_slot_add({'object': obj})
         material = bpy.data.materials.new(name=NAME)
         bpy.data.materials.create_gpencil_data(material)
         obj.material_slots[0].material = material

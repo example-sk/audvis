@@ -80,7 +80,7 @@ class PipInstaller(threading.Thread):
             # bpy.ops.preferences.addon_show(module="audvis")
             self.text_obj.write("\n")
             if bpy.ops.screen.userpref_show.poll():
-                bpy.ops.preferences.addon_show({'window': bpy.context.window}, module="audvis")
+                bpy.ops.preferences.addon_show(module="audvis")
             else:  # dirty fix for blender 2.83 and lower
                 self.text_obj.write("Now you can close this window\n")
             self.text_obj.write('\n"""')
@@ -109,11 +109,19 @@ class PipInstaller(threading.Thread):
         # bpy.ops.screen.userpref_show('INVOKE_DEFAULT')
         bpy.ops.wm.window_new()
         window = context.window_manager.windows[-1]
-        override = {'window': window, 'screen': window.screen, 'area': window.screen.areas[0]}
+        # override = {'window': window, 'screen': window.screen, 'area': window.screen.areas[0]}
+        override = {
+            'screen': window.screen,
+            'area': window.screen.areas[0],
+        }
         override['area'].type = 'TEXT_EDITOR'
         space = override['area'].spaces[0]
         space.text = self.text_obj
-        bpy.ops.screen.screen_full_area(override)
+        if hasattr(context, 'temp_override'): # blender 3.2 or higher
+            with context.temp_override(**override):
+                bpy.ops.screen.screen_full_area()
+        else: # blender 3.1 or lower
+            bpy.ops.screen.screen_full_area(override)
 
     def install(self):
         self.output_lines = ['"""']

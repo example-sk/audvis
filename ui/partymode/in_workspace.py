@@ -46,8 +46,11 @@ def _fullscreen(operator):
         'screen': workspace.screens[0],
         'area': workspace.screens[0].areas[0]
     }
-    bpy.ops.screen.screen_full_area(override, use_hide_panels=True)
-    # space = workspace.screens[0].areas[0].spaces[0]
+    if hasattr(bpy.context, 'temp_override'):  # blender 3.2 and higher
+        with bpy.context.temp_override(**override):
+            bpy.ops.screen.screen_full_area(use_hide_panels=True)
+    else:  # blender 3.1 and lower
+        bpy.ops.screen.screen_full_area(override, use_hide_panels=True)
     space = bpy.context.space_data
     space.overlay.show_overlays = False
     space.shading.type = bpy.context.scene.audvis.party.shading
