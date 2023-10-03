@@ -71,7 +71,10 @@ class AudvisAddonPreferences(AddonPreferences):
                     writable = os.access(pp, os.W_OK)
                     break
         row.label(text=directory)
-        row.label(text="writable" if writable else "not writable!", icon="EXPORT" if writable else "ERROR")
+        if writable:
+            row.label(text="writable", icon="EXPORT")
+        else:
+            row.label(text="not writable!", icon="ERROR")
 
     def _draw_module_row(self, box, module_name, desc, uninstall, is_supported):
         col = box.column()
@@ -79,8 +82,15 @@ class AudvisAddonPreferences(AddonPreferences):
         spec = importlib.util.find_spec(module_name)
         if spec is not None:
             mod = importlib.import_module(module_name)
-            row.label(
-                text="{} {}: {}".format(desc, mod.__name__, mod.__version__))
+            version = "unknown"
+            if hasattr(mod, "version_info"):  # mido
+                version = str(mod.version_info)
+            elif hasattr(mod, "__version__"):  # other
+                version = mod.__version__
+            # row.label(text="{} | {}: {}".format(desc, mod.__name__, version))
+            row.label(text=desc)
+            row.label(text=mod.__name__)
+            row.label(text=version)
             mod_file = pathlib.Path(mod.__file__).absolute()
             file_exists = mod_file.exists()
             main_path = pathlib.Path(install_lib.main_path).absolute()
