@@ -4,8 +4,18 @@ from bpy.types import (
     Operator,
     UIList,
 )
+import audvis
 
 from .buttonspanel import SequencerButtonsPanel, SequencerButtonsPanel_Npanel
+
+
+def _seq_has_error(name):
+    if audvis.audvis.sequence_analyzers is None:
+        return False
+    analyzer = audvis.audvis.sequence_analyzers.get(name, None)
+    if analyzer is None:
+        return False
+    return analyzer.load_error is not None
 
 
 def _get_selected_sound_sequence(context):
@@ -31,7 +41,8 @@ class AUDVIS_UL_soundSequenceList(UIList):
 
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         custom_icon = 'SEQ_SEQUENCER'
-
+        if _seq_has_error(item.sound.name):
+            layout.alert = True
         # Make sure your code supports all 3 layout types
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
             layout.prop(item.audvis, "enable", text="")
@@ -128,6 +139,9 @@ class AUDVIS_PT_sequence(Panel):
         seq = _get_selected_sound_sequence(context)
         if seq is not None:
             col = layout.column(align=True)
+            if _seq_has_error(seq.sound.name):
+                col.alert = True
+                col.label(text="File not found", icon="ERROR")
             col.prop(seq, "name")
             col.prop(seq, "frame_start")
             col.prop(seq, "frame_offset_start")

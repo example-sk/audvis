@@ -1,4 +1,5 @@
 import bpy
+import os
 
 from .analyzer import Analyzer
 
@@ -13,8 +14,13 @@ class SequenceAnalyzer(Analyzer):
     audio = None
     sequence = None
     sequence_name = None
+    whole_data = None
+    chunk = None
+    load_error = None
 
     def load(self, sequence=None):
+        if self.load_error is not None:
+            return
         self.whole_data = _chunk()
         self.chunk = _chunk()
         if sequence is None:
@@ -24,10 +30,14 @@ class SequenceAnalyzer(Analyzer):
         self.sequence = sequence
 
         depsgraph = bpy.context.evaluated_depsgraph_get()
-        self.audio = sequence.sound.evaluated_get(depsgraph).factory
-        self.samplerate = self.audio.specs[0]
-        scene = bpy.context.scene
-        self.on_pre_frame(scene, scene.frame_current_final)
+        if sequence.sound.packed_file is not None or os.path.exists(bpy.path.abspath(sequence.sound.filepath)):
+            self.audio = sequence.sound.evaluated_get(depsgraph).factory
+            self.samplerate = self.audio.specs[0]
+            scene = bpy.context.scene
+            self.on_pre_frame(scene, scene.frame_current_final)
+        else:
+            self.load_error = FileNotFoundError("sound file does not exist")
+            return
 
     def on_pre_frame(self, scene, frame):
         if self.sequence not in scene.sequence_editor.sequences_all.values():  # pointer to sequence changes after any undo in Blender
