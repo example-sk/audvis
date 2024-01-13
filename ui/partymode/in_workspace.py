@@ -2,6 +2,8 @@ import os
 
 import bpy
 
+from ...utils import call_ops_override
+
 workspace_name = 'audvis-party'
 
 
@@ -46,16 +48,15 @@ def _fullscreen(operator):
         'screen': workspace.screens[0],
         'area': workspace.screens[0].areas[0]
     }
-    if hasattr(bpy.context, 'temp_override'):  # blender 3.2 and higher
-        with bpy.context.temp_override(**override):
-            bpy.ops.screen.screen_full_area(use_hide_panels=True)
-    else:  # blender 3.1 and lower
-        bpy.ops.screen.screen_full_area(override, use_hide_panels=True)
+    call_ops_override(bpy.ops.screen.screen_full_area, override, use_hide_panels=True)
     space = bpy.context.space_data
-    space.overlay.show_overlays = False
-    space.shading.type = bpy.context.scene.audvis.party.shading
-    space.shading.show_xray_wireframe = bpy.context.scene.audvis.party.show_xray
-    space.region_3d.view_perspective = 'CAMERA'
+    if space is None:
+        print("Known bug: can't setup vie3d options in the party workspace mode")
+    else:
+        space.overlay.show_overlays = False
+        space.shading.type = bpy.context.scene.audvis.party.shading
+        space.shading.show_xray_wireframe = bpy.context.scene.audvis.party.show_xray
+        space.region_3d.view_perspective = 'CAMERA'
 
 
 def modal(operator, context, event):

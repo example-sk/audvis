@@ -11,6 +11,8 @@ from queue import Queue
 
 import bpy
 
+from ..utils import call_ops_override
+
 if os.path.basename(sys.prefix).startswith("python") and os.path.isfile(sys.prefix):
     _python_path = sys.prefix
 else:
@@ -117,11 +119,7 @@ class PipInstaller(threading.Thread):
         override['area'].type = 'TEXT_EDITOR'
         space = override['area'].spaces[0]
         space.text = self.text_obj
-        if hasattr(context, 'temp_override'): # blender 3.2 or higher
-            with context.temp_override(**override):
-                bpy.ops.screen.screen_full_area()
-        else: # blender 3.1 or lower
-            bpy.ops.screen.screen_full_area(override)
+        call_ops_override(bpy.ops.screen.screen_full_area, override)
 
     def install(self):
         self.output_lines = ['"""']

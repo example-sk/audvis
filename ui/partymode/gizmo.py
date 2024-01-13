@@ -1,5 +1,7 @@
 import bpy
 
+from ...utils import call_ops_override
+
 partymode_windows = []  # injected from open window operator
 
 from bpy.types import (
@@ -40,7 +42,7 @@ class AUDVIS_OT_PartymodeClose(bpy.types.Operator):
         bpy.ops.screen.screen_full_area(use_hide_panels=True)
         workspace = context.workspace
         bpy.ops.screen.workspace_cycle('INVOKE_DEFAULT')
-        bpy.ops.workspace.delete({'workspace': workspace})
+        call_ops_override(bpy.ops.workspace.delete, {'workspace': workspace})
 
 
 class AUDVIS_partymode_gizmogroup(GizmoGroup):
