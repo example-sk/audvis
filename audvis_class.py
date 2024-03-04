@@ -77,6 +77,7 @@ class AudVis:
             ch = scene.audvis.default_channel_midi
         val = 0
         seq = kwargs.get('seq')
+        seq_channel = kwargs.get('seq_channel')
         additive = kwargs.get('additive', False)
 
         if self.realtime_analyzer \
@@ -107,6 +108,8 @@ class AudVis:
                 if seq.name not in self.sequence_analyzers:
                     continue
                 if "seq" in kwargs and kwargs["seq"] != seq.name:
+                    continue
+                if "seq_channel" in kwargs and kwargs["seq_channel"] != seq.channel:
                     continue
                 analyzer = self.sequence_analyzers[seq.name]
                 val += analyzer.driver(low, high, ch, additive)
