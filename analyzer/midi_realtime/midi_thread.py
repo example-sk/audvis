@@ -58,6 +58,7 @@ class MidiThread(threading.Thread):
     python_path = None
     regexp_note = re.compile(r"^(\d{1,2}) (\d{1,3}) (\d{1,3})$")
     _kill_all = False
+    last_msg = None
 
     def run(self):
         self.python_path = glob(os.path.join(os.path.realpath(sys.prefix), 'bin', 'python*'))[0]
@@ -78,13 +79,15 @@ class MidiThread(threading.Thread):
                 line = input['queue'].get()
                 match = self.regexp_note.match(line)
                 if match:
-                    msgs.append(_MidiNoteMessage(on=True,
-                                                 channel=int(match.group(1)),
-                                                 note=int(match.group(2)),
-                                                 velocity=int(match.group(3)),
-                                                 time=0,
-                                                 input_name=key,
-                                                 ))
+                    msg = _MidiNoteMessage(on=True,
+                                           channel=int(match.group(1)),
+                                           note=int(match.group(2)),
+                                           velocity=int(match.group(3)),
+                                           time=0,
+                                           input_name=key,
+                                           )
+                    self.last_msg = msg
+                    msgs.append(msg)
         if len(msgs):
             self._process_messages(msgs)
 

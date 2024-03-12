@@ -1,5 +1,6 @@
 import sys
 
+import bpy
 from bpy.types import (Panel, UIList, Operator)
 
 from ..buttonspanel import (SequencerButtonsPanel, SequencerButtonsPanel_Npanel)
@@ -20,6 +21,54 @@ def input_device_options(self, context):
             ret.append((name, name, name))
         audvis.midi_input_device_options = ret
     return audvis.midi_input_device_options
+
+
+class AUDVIS_OT_midiRealtimeDebug(Operator):
+    bl_idname = "audvis.midi_realtime_debug"
+    bl_label = "Debug Realtime Midi Messages"
+    bl_description = ""
+    timer = None
+
+    @classmethod
+    def poll(cls, context):
+        return context.scene.audvis.midi_realtime.enable
+
+    def execute(self, context):
+        print("EXECUTE")
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        context.workspace.status_text_set('MIDI REALTIME DEBUG started')
+        self.timer = context.window_manager.event_timer_add(.2, window=context.window)
+        context.window_manager.modal_handler_add(self)
+        analyzer = sys.modules['audvis'].audvis.get_midi_realtime_analyzer(context.scene)
+        if analyzer is not None:
+            analyzer.on_pre_frame(context.scene, context.scene.frame_current_final)
+        return {'RUNNING_MODAL'}
+
+    def modal(self, context, event):
+        if event.type == 'TIMER':
+            analyzer = sys.modules['audvis'].audvis.get_midi_realtime_analyzer(context.scene)
+            if analyzer is not None:
+                analyzer.on_pre_frame(context.scene, context.scene.frame_current_final)
+                msg = analyzer.get_last_msg()
+                if msg is not None:
+                    context.workspace.status_text_set(
+                        "MIDI note: {}"
+                        " velocity: {}"
+                        " channel: {}"
+                        " device: {}".format(
+                            msg.note,
+                            msg.velocity,
+                            msg.channel,
+                            msg.input_name
+                        ))
+            return {'PASS_THROUGH'}
+        elif event.type == 'ESC':
+            context.workspace.status_text_set("")
+            context.window_manager.event_timer_remove(self.timer)
+            return {'FINISHED'}
+        return {'PASS_THROUGH'}
 
 
 class AUDVIS_OT_midiRealtimeRestart(Operator):
@@ -131,6 +180,7 @@ class AUDVIS_PT_midiRealtime(Panel):
 
         col = layout.column(align=True)
         col.operator("audvis.midi_realtime_restart")
+        col.operator("audvis.midi_realtime_debug", icon="INFO")
 
 
 class AUDVIS_PT_midiRealtimeScene(AUDVIS_PT_midiRealtime, SequencerButtonsPanel):
@@ -148,4 +198,5 @@ classes = [
     AUDVIS_OT_midiInputAdd,
     AUDVIS_OT_midiInputRemove,
     AUDVIS_OT_midiRealtimeRestart,
+    AUDVIS_OT_midiRealtimeDebug,
 ]

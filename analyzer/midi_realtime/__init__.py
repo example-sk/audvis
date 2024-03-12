@@ -1,10 +1,17 @@
 from . import midi_thread
+from .midi_thread import _MidiNoteMessage
 from ..analyzer import Analyzer
 
 
 class MidiRealtimeAnalyzer(Analyzer):
     _thread = None
     _last_data = None
+
+    def get_last_msg(self) -> _MidiNoteMessage:
+        thread = self._thread
+        if not thread:
+            return None
+        return thread.last_msg
 
     def load(self):
         self._thread = midi_thread.MidiThread(daemon=True)
