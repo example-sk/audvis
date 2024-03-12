@@ -110,6 +110,8 @@ class SpectrogramGenerator(Analyzer):
 
 # copy of analyzer/shapemodifier/lib.py - calc_driver_value
 def calc_driver_value(settings, driver, index):
+    freq_from=0
+    freq_to=0
     if settings.freq_seq_type == 'notes':
         freq_from = calculate_note((index + settings.note_offset) * settings.note_step, settings.note_a4_freq)
         freq_to = calculate_note((index + settings.note_offset + 1) * settings.note_step, settings.note_a4_freq)
@@ -130,5 +132,7 @@ def calc_driver_value(settings, driver, index):
         send_kwargs = {}
         if settings.sound_sequence != '':
             send_kwargs['seq'] = settings.sound_sequence
+        if settings.sequence_channel > 0:
+            send_kwargs['seq_channel'] = settings.sequence_channel
         driver_value = driver(freq_from, freq_to, ch=settings.channel, **send_kwargs)
     return driver_value

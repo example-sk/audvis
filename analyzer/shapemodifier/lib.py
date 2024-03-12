@@ -12,6 +12,8 @@ def set_value(arr, index, value, operation):
 
 
 def calc_driver_value(props, driver, index, weight=1):
+    freq_from = 0
+    freq_to = 0
     if props.freq_seq_type == 'notes':
         freq_from = calculate_note((index + props.note_offset) * props.note_step, props.note_a4_freq)
         freq_to = calculate_note((index + props.note_offset + 1) * props.note_step, props.note_a4_freq)
@@ -32,6 +34,8 @@ def calc_driver_value(props, driver, index, weight=1):
         send_kwargs = {}
         if props.sound_sequence != '':
             send_kwargs['seq'] = props.sound_sequence
+        if props.sequence_channel > 0:
+            send_kwargs['seq_channel'] = props.sequence_channel
         if props.additive == 'off':
             driver_value = driver(freq_from, freq_to, ch=props.channel, **send_kwargs)
         else:

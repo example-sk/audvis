@@ -21,6 +21,8 @@ def build_expression(freq_from, freq_to, conf, factor=None, rotational=False):
             kwargs += ", additive=True"
     if conf.example_sound_sequence:
         kwargs += ", seq=" + repr(conf.example_sound_sequence)
+    if conf.example_sequence_channel > 0:
+        kwargs += ', seq_channel=' + str(props.sequence_channel)
     expr = "audvis({}, {}{})".format(freq_from, freq_to, kwargs)
     if factor is not None and factor != 1:
         expr += " * {}".format(factor)

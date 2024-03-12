@@ -53,3 +53,5 @@ class AudvisObjectShapemodifierProperties(bpy.types.PropertyGroup):
     track_object: bpy.props.PointerProperty(type=bpy.types.Object, name="Target")
     is_baking: bpy.props.BoolProperty(name="Enable", default=False)
     sound_sequence: bpy.props.StringProperty(name="Sequence", default="")
+    sequence_channel: bpy.props.IntProperty(name="Sequence Channel", default=0, min=0,
+                                            description="Channel number in Video Sequence Editor")

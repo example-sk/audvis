@@ -294,3 +294,5 @@ class AudvisSceneProperties(bpy.types.PropertyGroup):
         ("reuse", "Reuse", ""),
     ])
     example_sound_sequence: bpy.props.StringProperty(name="Sequence", default="")
+    example_sequence_channel: bpy.props.IntProperty(name="Sequence Channel", default=0, min=0,
+                                            description="Channel number in Video Sequence Editor")

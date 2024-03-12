@@ -10,6 +10,7 @@ def generators_ui_sequence(self, context, props):
                 row = col.row()
                 row.alert = True
                 row.label(text="Selected Sequence is not a sound")
+        col.prop(props, "sequence_channel")
 
 
 def generators_ui_midi(self, context, midi_props):

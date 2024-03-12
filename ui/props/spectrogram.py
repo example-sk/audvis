@@ -39,6 +39,8 @@ class AudvisSpectrogramProperties(bpy.types.PropertyGroup):
     freqstart: bpy.props.FloatProperty(name="Frequency Start", default=0, min=0)
     freq_step_calc: bpy.props.FloatProperty(name="Frequency Step Calculated", get=spectrogram.calc_freq_step)
     sound_sequence: bpy.props.StringProperty(name="Sequence", default="")
+    sequence_channel: bpy.props.IntProperty(name="Sequence Channel", default=0, min=0,
+                                            description="Channel number in Video Sequence Editor")
     width: bpy.props.IntProperty(name="Image Width", default=100, soft_max=300, min=1, soft_min=10)
     height: bpy.props.IntProperty(name="Image Height", default=100, soft_max=300, min=1, soft_min=10)
     mode: bpy.props.EnumProperty(name="Mode", items=[

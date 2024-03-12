@@ -96,6 +96,8 @@ def generate(context):
                 freq_to = freq_from + rangeperobject
             if props.sound_sequence != '':
                 expr_kwargs += ', seq=' + repr(props.sound_sequence)
+            if props.sequence_channel > 0:
+                expr_kwargs +=', seq_channel=' + str(props.sequence_channel)
             if props.channel != 1:
                 expr_kwargs += ', ch={}'.format(props.channel)
             fcurve.driver.expression = "audvis({}, {}{}) * {:.6}".format(freq_from, freq_to, expr_kwargs, props.factor)

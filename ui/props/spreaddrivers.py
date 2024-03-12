@@ -15,6 +15,8 @@ class AudvisSceneSpreaddriversProperties(bpy.types.PropertyGroup):
                                                    " frequencies 0-50, 5-55, 10-60...")
     channel: bpy.props.IntProperty(name="Sound Channel", default=1, min=1, soft_max=32)
     sound_sequence: bpy.props.StringProperty(name="Sequence")
+    sequence_channel: bpy.props.IntProperty(name="Sequence Channel", default=0, min=0,
+                                            description="Channel number in Video Sequence Editor")
     freq_seq_type: bpy.props.EnumProperty(name="Freq Sequencing", items=[
         ("classic", "Linear", "0-50 ; 50-100 ; 100-150..."),
         ("notes", "Notes", "Music notes"),

@@ -34,6 +34,8 @@ def build_expression(props, add=0.0, iterations_add=0):
         args = "{:.6}, {:.6}".format(freq_from, freq_to)
         if props.sound_sequence != '':
             args += ', seq=' + repr(props.sound_sequence)
+        if props.sequence_channel > 0:
+            args += ', seq_channel=' + str(props.sequence_channel)
         if props.channel != 1:
             args += ', ch={}'.format(props.channel)
         if props.additive:

@@ -18,6 +18,8 @@ class AudvisObjectArmatureGeneratorProperties(bpy.types.PropertyGroup):
     note_step: bpy.props.FloatProperty(name="Note Step", default=1, step=50)
     note_offset: bpy.props.IntProperty(name="Note Steps Offset", default=0)
     sound_sequence: bpy.props.StringProperty(name="Sound Sequence")
+    sequence_channel: bpy.props.IntProperty(name="Sequence Channel", default=0, min=0,
+                                            description="Channel number in Video Sequence Editor")
 
     freqrange: bpy.props.FloatProperty(name="Frequency Range Per Point", default=50, min=.01)
     freqstart: bpy.props.FloatProperty(name="Frequency Start", default=0, min=0)
