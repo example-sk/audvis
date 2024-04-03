@@ -3,6 +3,14 @@
 If you want to animate things by MIDI File, this is what you are searching for. AudVis will read the file using Python
 module mido, and save the parsed data into animation data.
 
+## Usage in driver expressions:
+
+- `audvis(midi=30)`
+- `audvis(midi=30, ch=3)`
+- `audvis(midi=30, device="My cool midi device name")`
+- `audvis(midi=30, track="Drone track")`
+- `audvis(midi=30, file="MyBestSongEver.mid")`
+
 ## Settings
 
 - **Enable** (in the Midi File panel header): do you want to use Midi File feature? If not, keep this disabled
