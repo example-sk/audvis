@@ -3,6 +3,8 @@ import sys
 import bpy
 from bpy.types import (Panel, UIList, Operator)
 
+from ...analyzer.midi_realtime import _MidiNoteMessage
+from ...analyzer.midi_realtime.midi_thread import _MidiControlMessage
 from ..buttonspanel import (SequencerButtonsPanel, SequencerButtonsPanel_Npanel)
 
 
@@ -52,7 +54,7 @@ class AUDVIS_OT_midiRealtimeDebug(Operator):
             if analyzer is not None:
                 analyzer.on_pre_frame(context.scene, context.scene.frame_current_final)
                 msg = analyzer.get_last_msg()
-                if msg is not None:
+                if type(msg) == _MidiNoteMessage:
                     context.workspace.status_text_set(
                         "MIDI note: {}"
                         " velocity: {}"
@@ -60,6 +62,17 @@ class AUDVIS_OT_midiRealtimeDebug(Operator):
                         " device: {}".format(
                             msg.note,
                             msg.velocity,
+                            msg.channel,
+                            msg.input_name
+                        ))
+                elif type(msg) == _MidiControlMessage:
+                    context.workspace.status_text_set(
+                        "MIDI control: {}"
+                        " value: {}"
+                        " channel: {}"
+                        " device: {}".format(
+                            msg.control,
+                            msg.value,
                             msg.channel,
                             msg.input_name
                         ))

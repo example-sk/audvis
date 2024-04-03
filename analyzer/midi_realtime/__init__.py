@@ -6,6 +6,7 @@ from ..analyzer import Analyzer
 class MidiRealtimeAnalyzer(Analyzer):
     _thread = None
     _last_data = None
+    _last_data_controls = None
 
     def get_last_msg(self) -> _MidiNoteMessage:
         thread = self._thread
@@ -28,6 +29,7 @@ class MidiRealtimeAnalyzer(Analyzer):
         if scene.audvis.midi_realtime.enable:
             lst = []
             self._last_data = self._thread.data
+            self._last_data_controls = self._thread.data_controls
             for item in scene.audvis.midi_realtime.inputs:
                 if item.enable:
                     lst.append({
@@ -36,10 +38,18 @@ class MidiRealtimeAnalyzer(Analyzer):
                     })
             self._thread.requested_devices = lst
 
+    def _driver_midi_control(self, low=None, high=None, ch=None, **kwargs):
+        midi_control = kwargs.get("midi_control", None)
+        pass
+
     def driver(self, low=None, high=None, ch=None, **kwargs):
-        if self._last_data is None:
+        if self._last_data is None and self._last_data_controls is None:
             return 0
-        if "midi" in kwargs:
+        data = self._last_data
+        if "midi_control" in kwargs:
+            midi_note = kwargs.get('midi_control')
+            data = self._last_data_controls
+        elif "midi" in kwargs:
             midi_note = kwargs.get("midi", None)
             if (type(midi_note) is list or type(midi_note) is tuple) and len(midi_note) in [2, 3]:
                 return self._midi_multi_note_driver(low=None, high=None, ch=None, **kwargs)
@@ -51,16 +61,15 @@ class MidiRealtimeAnalyzer(Analyzer):
             return 0
         device_id = kwargs.get('device', None)
         device_key = None
-        for key in self._last_data.keys():
-
+        for key in data.keys():
             if device_key is not None and key != device_key:
                 continue
-            device_data = self._last_data[key]
+            device_data = data[key]
             for key2 in device_data.keys():
                 if ch is not None and ch != 'all' and key2 != ch:
                     continue
                 channel_data = device_data[key2]
                 for key3 in channel_data.keys():
-                    if key3 == midi_note:
+                    if key3 == midi_note and channel_data[key3]:
                         return channel_data[key3]
         return 0

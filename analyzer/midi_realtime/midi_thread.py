@@ -30,6 +30,15 @@ class _MidiNoteMessage:
     input_name: str
 
 
+@dataclass
+class _MidiControlMessage:
+    control: int
+    value: int
+    time: int
+    channel: int
+    input_name: str
+
+
 class _AsyncFileReader(threading.Thread):
     def __init__(self, fd):
         self.queue = Queue()
@@ -49,6 +58,7 @@ class MidiThread(threading.Thread):
     requested_devices = None
     inputs = None
     data = None
+    data_controls = None
     samplerate = None
     kill_me = False
     callback_data = None
@@ -56,7 +66,7 @@ class MidiThread(threading.Thread):
     force_reload = False
     recorder = None  # type: AudVisRecorder
     python_path = None
-    regexp_note = re.compile(r"^(\d{1,2}) (\d{1,3}) (\d{1,3})$")
+    regexp_control = re.compile(r"^(\d{1,2}) (c|)(\d{1,3}) (\d{1,3})$")
     _kill_all = False
     last_msg = None
 
@@ -64,6 +74,7 @@ class MidiThread(threading.Thread):
         self.python_path = glob(os.path.join(os.path.realpath(sys.prefix), 'bin', 'python*'))[0]
         self.inputs = {}
         self.data = nested_dict()
+        self.data_controls = nested_dict()
         self.requested_devices = []
         while self._thread_continue():
             self._ensure_inputs()
@@ -77,15 +88,24 @@ class MidiThread(threading.Thread):
             input = self.inputs[key]
             while not input['queue'].empty():
                 line = input['queue'].get()
-                match = self.regexp_note.match(line)
+                match = self.regexp_control.match(line)
                 if match:
-                    msg = _MidiNoteMessage(on=True,
-                                           channel=int(match.group(1)),
-                                           note=int(match.group(2)),
-                                           velocity=int(match.group(3)),
-                                           time=0,
-                                           input_name=key,
-                                           )
+                    if match.group(2) == 'c':
+                        msg = _MidiControlMessage(
+                            channel=int(match.group(1)),
+                            control=int(match.group(3)),
+                            value=int(match.group(4)),
+                            time=0,
+                            input_name=key,
+                        )
+                    else:
+                        msg = _MidiNoteMessage(on=True,
+                                               channel=int(match.group(1)),
+                                               note=int(match.group(3)),
+                                               velocity=int(match.group(4)),
+                                               time=0,
+                                               input_name=key,
+                                               )
                     self.last_msg = msg
                     msgs.append(msg)
         if len(msgs):
@@ -96,17 +116,22 @@ class MidiThread(threading.Thread):
         return msg1.time
 
     def _process_messages(self, msgs):
-        data = deepcopy(self.data)
+        data_notes = deepcopy(self.data)
+        data_controls = deepcopy(self.data_controls)
         for msg in msgs:
-            val = msg.velocity * 1.0 if msg.on else 0.0
-            data[msg.input_name][msg.channel][msg.note] = val
-            if val == 0.0:
-                del data[msg.input_name][msg.channel][msg.note]
-                if len(data[msg.input_name][msg.channel]) == 0:
-                    del data[msg.input_name][msg.channel]
-                    if len(data[msg.input_name]) == 0:
-                        del data[msg.input_name]
-        self.data = data
+            if type(msg) == _MidiNoteMessage:
+                val = msg.velocity * 1.0 if msg.on else 0.0
+                data_notes[msg.input_name][msg.channel][msg.note] = val
+                if val == 0.0:
+                    del data_notes[msg.input_name][msg.channel][msg.note]
+                    if len(data_notes[msg.input_name][msg.channel]) == 0:
+                        del data_notes[msg.input_name][msg.channel]
+                        if len(data_notes[msg.input_name]) == 0:
+                            del data_notes[msg.input_name]
+            elif type(msg) == _MidiControlMessage:
+                data_controls[msg.input_name][msg.channel][msg.control] = msg.value * 1.0
+        self.data = data_notes
+        self.data_controls = data_controls
 
     def restart_all_inputs(self):
         self._kill_all = True
@@ -115,6 +140,7 @@ class MidiThread(threading.Thread):
         kill_all = False
         if self._kill_all:
             self.data = nested_dict()
+            self.data_controls = nested_dict()
             self._kill_all = False
             kill_all = True
         if self.inputs is not None:

@@ -71,9 +71,11 @@ class AudVis:
         start = time.time()
         scene = bpy.context.scene
 
-        if "midi" not in kwargs and ch is None:
+        if "midi" not in kwargs and "midi_control" not in kwargs and ch is None:
             ch = scene.audvis.default_channel_sound
-        elif "midi" in kwargs and ch is None and scene.audvis.default_channel_midi != 'all':
+        elif ("midi" in kwargs or "midi_control" in kwargs) \
+                and ch is None \
+                and scene.audvis.default_channel_midi != 'all':
             ch = scene.audvis.default_channel_midi
         val = 0
         seq = kwargs.get('seq')
@@ -83,7 +85,8 @@ class AudVis:
         if self.realtime_analyzer \
                 and self.realtime_analyzer.supported \
                 and "seq" not in kwargs \
-                and "midi" not in kwargs:
+                and "midi" not in kwargs\
+                and "midi_control" not in kwargs:
             val += self.realtime_analyzer.driver(low, high, ch, additive)
 
         if scene.audvis.midi_realtime.enable \
@@ -97,7 +100,8 @@ class AudVis:
 
         if scene.sequence_editor \
                 and scene.audvis.sequence_enable \
-                and "midi" not in kwargs:
+                and "midi" not in kwargs \
+                and "midi_control" not in kwargs:
             for seq in scene.sequence_editor.sequences_all:
                 if seq.type != 'SOUND':
                     continue

@@ -20,7 +20,10 @@ input = mido.open_input(name=args.input_name)
 try:
     while True:
         msg = input.receive()
-        if msg.type in ('note_on', 'note_off'):
+        if msg.type == 'control_change':
+            print(msg.channel, "c{}".format(msg.control), msg.value)
+            sys.stdout.flush()
+        elif msg.type in ('note_on', 'note_off'):
             velocity = msg.velocity if msg.type == 'note_on' else 0
             print(msg.channel, msg.note, velocity)
             sys.stdout.flush()
