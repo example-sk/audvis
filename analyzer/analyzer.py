@@ -126,7 +126,7 @@ class Analyzer:
             fft_before_fadeout = fft
             # TODO: how to use this? As a result, or something like audvis(10, 100, falloff=True) ?
             if self.fadeout_type != 'off' and (prev_fft is not None) and (0 <= ch < len(prev_fft)):
-                if self.fadeout_type == 'fft':
+                if self.fadeout_type == 'natural2':
                     # https://chromium.googlesource.com/chromium/blink/+/refs/heads/main/Source/modules/webaudio/RealtimeAnalyser.cpp#186
                     fft = prev_fft[ch] * (1 - self.fadeout_speed) + fft * self.fadeout_speed
                 else:
