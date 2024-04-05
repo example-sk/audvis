@@ -90,8 +90,8 @@ class AudvisSceneProperties(bpy.types.PropertyGroup):
         ('off', "Off", ""),
         ('linear', "Linear", ""),
         ('exponential', "Exponential", ""),
-        ('natural', "Natural (obsolete)", ""),
         ('natural2', "Natural", ""),
+        ('natural', "Natural (obsolete)", ""),
     ])
     value_additive_type: bpy.props.EnumProperty(name="Additive Type", default="raw", items=[
         ('off', "Off", ""),
