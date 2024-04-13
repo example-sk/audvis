@@ -1,11 +1,14 @@
-import sys
-
 import bpy
+from glob import glob
+import os
+import subprocess
+import sys
 from bpy.types import (Panel, UIList, Operator)
 
+from .. import install_lib
+from ..buttonspanel import (SequencerButtonsPanel, SequencerButtonsPanel_Npanel)
 from ...analyzer.midi_realtime import _MidiNoteMessage
 from ...analyzer.midi_realtime.midi_thread import _MidiControlMessage
-from ..buttonspanel import (SequencerButtonsPanel, SequencerButtonsPanel_Npanel)
 
 
 def input_device_options_with_none(self, context):
@@ -15,12 +18,33 @@ def input_device_options_with_none(self, context):
 def input_device_options(self, context):
     audvis = sys.modules['audvis'].audvis
     if audvis.midi_input_device_options is None:
-        mido = sys.modules['audvis'].audvis.get_mido()
-        ret = [
-            # ('_auto_', '- Auto -', "Default")
-        ]
-        for name in mido.get_input_names():
-            ret.append((name, name, name))
+        libs_path = install_lib.get_libs_path_latest()
+        add_params = []
+        if libs_path is not None:
+            add_params = [
+                '--libs-path',
+                libs_path,
+            ]
+        f = glob(os.path.join(os.path.realpath(sys.prefix), 'bin', 'python*'))
+        python_path = f[0]
+        script_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+                                   'analyzer/midi_realtime/midi_realtime_inputlist_proxy.py')
+        print(" ".join([python_path,
+                        script_path,
+                        ] + add_params))
+        process = subprocess.Popen([python_path,
+                                    script_path,
+                                    ] + add_params,
+                                   stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, universal_newlines=True
+                                   )
+        delimiter = False
+        ret = []
+        for line in iter(process.stdout.readline, ''):
+            line = line.strip()
+            if line == '---- delimiter ----':
+                delimiter = True
+            elif delimiter:
+                ret.append((line, line, line))
         audvis.midi_input_device_options = ret
     return audvis.midi_input_device_options
 

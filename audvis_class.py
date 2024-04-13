@@ -85,7 +85,7 @@ class AudVis:
         if self.realtime_analyzer \
                 and self.realtime_analyzer.supported \
                 and "seq" not in kwargs \
-                and "midi" not in kwargs\
+                and "midi" not in kwargs \
                 and "midi_control" not in kwargs:
             val += self.realtime_analyzer.driver(low, high, ch, additive)
 
@@ -254,20 +254,3 @@ class AudVis:
     def register_script(self, name, callback):
         self.scripting.register(name, callback)
         self.update_data(bpy.context.scene)
-
-    def get_mido(self):
-        import mido
-        if not self._mido_initialized:
-            self._mido_initialized = True
-            enabled_backends = [
-                # 'mido.backends.portmidi',
-                'mido.backends.pygame',
-            ]
-            for backend in enabled_backends:
-                try:
-                    mido.set_backend(backend)
-                    mido.get_input_names()
-                    break
-                except:
-                    pass
-        return mido
