@@ -108,7 +108,7 @@ class AudvisAddonPreferences(AddonPreferences):
         box = layout.box()
         col = box.column()
         col.label(text="PYTHON LIBRARIES:")
-        col.label(text="AudVis needs to some external python libraries. Here you can install them.", icon="INFO")
+        col.label(text="AudVis needs some external python libraries. Here you can install them.", icon="INFO")
         col.prop(self, "pip_target")
         row = col.row().split(factor=.8)
         if self.pip_target == 'addon-modules':
