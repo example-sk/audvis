@@ -153,7 +153,11 @@ class RealtimeAnalyzer(Analyzer):
         if force_reload:
             self.thread.force_reload = True
         if scene.audvis.realtime_enable:
-            self.thread.requested_name = scene.audvis.realtime_device
+            prefs = bpy.context.preferences.addons['audvis'].preferences
+            if prefs.realtime_device_use_global:
+                self.thread.requested_name = prefs.realtime_device
+            else:
+                self.thread.requested_name = scene.audvis.realtime_device
             self.thread.requested_channels = scene.audvis.channels
         else:
             self.thread.requested_name = None

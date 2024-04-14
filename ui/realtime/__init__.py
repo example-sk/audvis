@@ -51,7 +51,10 @@ class AUDVIS_PT_realtime(Panel):
         col = self.layout.column(align=True)
         # col.enabled = context.scene.audvis.realtime_enable
         supported = sys.modules['audvis'].audvis.is_realtime_supported()
-        if supported:
+        if context.preferences.addons['audvis'].preferences.realtime_device_use_global:
+            col.label(text="Realtime device was set")
+            col.label(text="in AudVis preferences")
+        elif supported:
             col.prop(context.scene.audvis, 'realtime_device')
             col.operator("audvis.realtime_reloaddevices")
 

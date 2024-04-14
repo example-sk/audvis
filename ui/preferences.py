@@ -8,6 +8,7 @@ import bpy
 from bpy.props import (
     StringProperty,
     EnumProperty,
+    BoolProperty,
 )
 from bpy.types import (
     AddonPreferences,
@@ -15,6 +16,7 @@ from bpy.types import (
 
 from . import install_lib
 from .buttonspanel import SequencerButtonsPanel_Npanel, SequencerButtonsPanel_Update
+from .realtime import input_device_options
 from .. import ui
 
 
@@ -53,6 +55,9 @@ class AudvisAddonPreferences(AddonPreferences):
         ("default", "Blender", ""),
         ("addon-modules", "User Add-On Modules", ""),
     ], default="addon-modules")
+
+    realtime_device_use_global: BoolProperty(name="Use Global Realtime Device", default=False)
+    realtime_device: EnumProperty(name="Realtime Device", items=input_device_options)
 
     def draw(self, context):
         layout = self.layout
@@ -106,6 +111,13 @@ class AudvisAddonPreferences(AddonPreferences):
     def _draw_install(self, context):
         layout = self.layout
         box = layout.box()
+        col = box.column()
+        col.prop(self, "realtime_device_use_global")
+        if self.realtime_device_use_global:
+            if sys.modules['audvis'].audvis.is_realtime_supported():
+                col.prop(self, "realtime_device")
+            else:
+                col.label(text="Realtime not supported. Install sounddevice first")
         col = box.column()
         col.label(text="PYTHON LIBRARIES:")
         col.label(text="AudVis needs some external python libraries. Here you can install them.", icon="INFO")
