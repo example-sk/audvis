@@ -46,6 +46,8 @@ class MidiRealtimeAnalyzer(Analyzer):
         if self._last_data is None and self._last_data_controls is None:
             return 0
         data = self._last_data
+        if ch != 'all' and type(ch) == str and ch.isnumeric():
+            ch = int(ch)
         if "midi_control" in kwargs:
             midi_note = kwargs.get('midi_control')
             data = self._last_data_controls
