@@ -6,6 +6,8 @@ import numpy as np
 
 import audvis
 
+from ..utils import midi_note_to_number
+
 
 def make_fake_curve_light(self, context):
     key = 'audvis curve'
@@ -188,7 +190,7 @@ class Analyzer:
     def _midi_multi_note_driver(self, low=None, high=None, ch=None, **kwargs):
         midi_note = kwargs.get("midi", None)
         multi_list = []
-        for i in range(midi_note[0], midi_note[1] + 1):
+        for i in range(midi_note_to_number(midi_note[0]), midi_note_to_number(midi_note[1]) + 1):
             m_kwargs = kwargs.copy()
             m_kwargs['midi'] = i
             multi_list.append(self.driver(low, high, ch, **m_kwargs))

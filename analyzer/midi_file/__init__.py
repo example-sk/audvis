@@ -1,5 +1,6 @@
 import re
 
+from ...utils import midi_note_to_number
 from ..analyzer import Analyzer
 
 regexp = re.compile('ch([0-9]+)_n([0-9]+)')
@@ -69,6 +70,8 @@ class MidiFileAnalyzer(Analyzer):
             midi_note = kwargs.get("midi", None)
             if (type(midi_note) is list or type(midi_note) is tuple) and len(midi_note) in [2, 3]:
                 return self._midi_multi_note_driver(low=None, high=None, ch=None, **kwargs)
+            else:
+                midi_note = midi_note_to_number(midi_note)
         track = kwargs.get("track", None)
         file = kwargs.get("file", None)
         if self._last_data is None:

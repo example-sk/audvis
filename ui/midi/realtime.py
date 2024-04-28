@@ -5,6 +5,7 @@ import subprocess
 import sys
 from bpy.types import (Panel, UIList, Operator)
 
+from ...utils import midi_number_to_note
 from .. import install_lib
 from ..buttonspanel import (SequencerButtonsPanel, SequencerButtonsPanel_Npanel)
 from ...analyzer.midi_realtime import _MidiNoteMessage
@@ -80,11 +81,12 @@ class AUDVIS_OT_midiRealtimeDebug(Operator):
                 msg = analyzer.get_last_msg()
                 if type(msg) == _MidiNoteMessage:
                     context.workspace.status_text_set(
-                        "MIDI note: {}"
+                        "MIDI note: {} ({})"
                         " velocity: {}"
                         " channel: {}"
                         " device: {}".format(
                             msg.note,
+                            midi_number_to_note(msg.note),
                             msg.velocity,
                             msg.channel,
                             msg.input_name

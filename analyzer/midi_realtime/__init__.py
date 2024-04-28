@@ -1,3 +1,4 @@
+from ...utils import midi_note_to_number
 from . import midi_thread
 from .midi_thread import _MidiNoteMessage
 from ..analyzer import Analyzer
@@ -56,7 +57,7 @@ class MidiRealtimeAnalyzer(Analyzer):
             if (type(midi_note) is list or type(midi_note) is tuple) and len(midi_note) in [2, 3]:
                 return self._midi_multi_note_driver(low=None, high=None, ch=None, **kwargs)
             else:
-                midi_note = int(kwargs['midi'])
+                midi_note = midi_note_to_number(kwargs['midi'])
         else:
             return 0
         if midi_note >= 127 or midi_note < 0:
