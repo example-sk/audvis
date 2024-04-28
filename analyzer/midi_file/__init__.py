@@ -3,19 +3,21 @@ import re
 from ...utils import midi_note_to_number
 from ..analyzer import Analyzer
 
-regexp = re.compile('ch([0-9]+)_n([0-9]+)')
+regexp = re.compile('ch([0-9]+)_(n|c)([0-9]+)')
 
 
 class MidiFileAnalyzer(Analyzer):
     _thread = None
     _last_data = None
+    _last_data_control = None
 
     def load(self):
         pass
 
-    def _parse_midifile(self, midifile, scene):
+    def _parse_midifile_baked_data(self, midifile, scene):
         # custom attributes for sequence can't be animated, at least until 2.93 alpha
-        result = []
+        result_notes = []
+        result_controls = []
         midifile.fix_fps()
         fps = scene.render.fps / scene.render.fps_base
         endframe = sum([
@@ -25,7 +27,7 @@ class MidiFileAnalyzer(Analyzer):
             - midifile.animation_offset_end
         ])
         if midifile.frame_start > scene.frame_current_final or endframe < scene.frame_current_final:
-            return result
+            return (result_notes, result_controls)
         request_frame = sum([scene.frame_current_final,
                              -midifile.frame_start,
                              midifile.animation_offset_start,
@@ -40,15 +42,19 @@ class MidiFileAnalyzer(Analyzer):
                     regexp_result = regexp.match(tmp)
                     if regexp_result:
                         channel = regexp_result.group(1)
-                        note = regexp_result.group(2)
-                        result.append((
+                        type = regexp_result.group(2)
+                        note = regexp_result.group(3)
+                        append_to = result_notes
+                        if type == 'c':
+                            append_to = result_controls
+                        append_to.append((
                             midifile.name,
                             track.name,
                             int(channel),
                             int(note),
                             fcurve.evaluate(request_frame)
                         ))
-        return result
+        return (result_notes, result_controls)
 
     def on_pre_frame(self, scene, frame):
         if not scene.audvis.midi_file.enable:
@@ -58,15 +64,23 @@ class MidiFileAnalyzer(Analyzer):
                 or len(scene.audvis.midi_file.midi_files) == 0:
             self._last_data = None
             return
-        new_data = []
+        new_data_notes = []
+        new_data_controls = []
         for midifile in scene.audvis.midi_file.midi_files:
             if midifile.enable:
-                new_data += self._parse_midifile(midifile, scene)
-        self._last_data = new_data
+                (result_notes, result_controls) = self._parse_midifile_baked_data(midifile, scene)
+                new_data_notes += result_notes
+                new_data_controls += result_controls
+        self._last_data = new_data_notes
+        self._last_data_controls = new_data_controls
 
     def driver(self, low=None, high=None, ch=None, **kwargs):
         midi_note = kwargs.get("midi", None)
-        if (type(midi_note) is list or type(midi_note) is tuple) and len(midi_note) in [2, 3]:
+        data = self._last_data
+        if "midi_control" in kwargs:
+            midi_note = kwargs.get('midi_control')
+            data = self._last_data_controls
+        elif (type(midi_note) is list or type(midi_note) is tuple) and len(midi_note) in [2, 3]:
             midi_note = kwargs.get("midi", None)
             if (type(midi_note) is list or type(midi_note) is tuple) and len(midi_note) in [2, 3]:
                 return self._midi_multi_note_driver(low=None, high=None, ch=None, **kwargs)
@@ -74,13 +88,13 @@ class MidiFileAnalyzer(Analyzer):
                 midi_note = midi_note_to_number(midi_note)
         track = kwargs.get("track", None)
         file = kwargs.get("file", None)
-        if self._last_data is None:
+        if data is None:
             return 0
         if midi_note is None or midi_note >= 127 or midi_note < 0:
             return 0
-        if self._last_data is None:
+        if data is None:
             return 0
-        for item in self._last_data:
+        for item in data:
             if item[3] == 0:
                 continue
             if file is not None and file != '' and item[0] != file:

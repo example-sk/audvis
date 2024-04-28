@@ -32,7 +32,7 @@ def _testing_single_track(mid, track):
             timer += mido.tick2second(msg.time, mid.ticks_per_beat, tempo)
         if msg.type == 'set_tempo':
             tempo = msg.tempo
-        if msg.type in ('note_on', 'note_off'):
+        elif msg.type in ('note_on', 'note_off', 'control_change'):
             result.append(msg.copy(time=timer))
     return result
 
@@ -117,31 +117,23 @@ def bake(scene, filepath: str, strip_silent_start: bool):
         counter = 0
         _create_fcurves_in_order(scene, track_item, midifile, track)
         for msg in track['msgs']:
-            if msg.type in ('note_on', 'note_off'):
+            if msg.type in ('note_on', 'note_off', 'control_change'):
                 counter += 1
-                key = "ch{}_n{}".format(msg.channel + 1, msg.note)
-                # nla_key = track_item.name + '-' + key
-                # if nla_key not in nla_tracks:
-                #     nla_track = nla_tracks[nla_key] = helper_object.animation_data.nla_tracks.new()
-                #     nla_track.name = track_item.name + " - " + key
+                if msg.type == 'control_change':
+                    key = "ch{}_c{}".format(msg.channel + 1, msg.control)
+                else:
+                    key = "ch{}_n{}".format(msg.channel + 1, msg.note)
                 keyframe_key = '["{}"]'.format(key)
                 if key not in track_item:
                     track_item[key] = 0.0
                     track_item.keyframe_insert(keyframe_key, frame=0,
                                                group=midifile.name)
                 item_offset = 0
-                if msg.type == 'note_on':
+                if msg.type == 'control_change':
+                    value = msg.value
+                elif msg.type == 'note_on':
                     value = msg.velocity
-                    # frame_start = (overall_offset_time + msg.time) * fps
-                    # try:
-                    #     nla_strip = nla_tracks[nla_key].strips.new(name='note', start=math.ceil(frame_start),
-                    #                                                action=nla_action)
-                    #     nla_strip.name = key
-                    #     nla_strip.frame_start = frame_start
-                    # except:
-                    #     pass  # TODO: midi files tend to have double initial NOTE_ON. Why? Am I parsing it wrong?
                 else:
-                    # nla_tracks[nla_key].strips[-1].frame_end = (overall_offset_time + msg.time) * fps
                     item_offset = -.01
                     value = 0.0
                 track_item[key] = value

@@ -39,10 +39,6 @@ class MidiRealtimeAnalyzer(Analyzer):
                     })
             self._thread.requested_devices = lst
 
-    def _driver_midi_control(self, low=None, high=None, ch=None, **kwargs):
-        midi_control = kwargs.get("midi_control", None)
-        pass
-
     def driver(self, low=None, high=None, ch=None, **kwargs):
         if self._last_data is None and self._last_data_controls is None:
             return 0
