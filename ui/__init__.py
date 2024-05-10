@@ -57,7 +57,9 @@ class AUDVIS_PT_audvis(Panel):
 
 
 class AUDVIS_PT_audvisScene(AUDVIS_PT_audvis, SequencerButtonsPanel):
-    pass
+    @classmethod
+    def poll(cls, context):
+        return False  # !!! HIDE AUDVIS FROM PROPERTIES -> SCENE !!!
 
 
 class AUDVIS_PT_audvisNpanel(AUDVIS_PT_audvis, SequencerButtonsPanel_Npanel):
