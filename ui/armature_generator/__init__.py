@@ -1,11 +1,8 @@
 import bpy
-from bpy.types import (
-    Panel,
-)
 
 from . import generate
 from .. import ui_lib
-from ..buttonspanel import SequencerButtonsPanel, SequencerButtonsPanel_Npanel
+from ..buttonspanel import AudVisButtonsPanel_Npanel
 from ..hz_label import hz_label, notes_label
 
 
@@ -15,7 +12,7 @@ def calc_freq_step(self):
     return self.freqrange
 
 
-class AUDVIS_PT_ArmatureGenerator(Panel):
+class AUDVIS_PT_ArmatureGeneratorNpanel(AudVisButtonsPanel_Npanel):
     bl_label = "Generate Armature"
 
     @classmethod
@@ -78,13 +75,6 @@ class AUDVIS_PT_ArmatureGenerator(Panel):
             col.operator("audvis.generate_armature")
 
 
-class AUDVIS_PT_ArmatureGeneratorScene(AUDVIS_PT_ArmatureGenerator, SequencerButtonsPanel):
-    bl_parent_id = "AUDVIS_PT_audvisScene"
-
-
-class AUDVIS_PT_ArmatureGeneratorNpanel(AUDVIS_PT_ArmatureGenerator, SequencerButtonsPanel_Npanel):
-    pass
-
 class AUDVIS_OT_Generate(bpy.types.Operator):
     bl_idname = "audvis.generate_armature"
     bl_label = "Generate AudVis Armature"
@@ -102,6 +92,5 @@ class AUDVIS_OT_Generate(bpy.types.Operator):
 
 classes = [
     AUDVIS_PT_ArmatureGeneratorNpanel,
-    AUDVIS_PT_ArmatureGeneratorScene,
     AUDVIS_OT_Generate,
 ]

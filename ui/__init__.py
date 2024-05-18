@@ -1,7 +1,4 @@
 import bpy
-from bpy.types import (
-    Panel,
-)
 
 from . import (
     realtime,
@@ -25,10 +22,10 @@ from . import (
     spread_drivers,
     bge,
 )
-from .buttonspanel import SequencerButtonsPanel, SequencerButtonsPanel_Npanel
+from .buttonspanel import AudVisButtonsPanel_Npanel
 
 
-class AUDVIS_PT_audvis(Panel):
+class AUDVIS_PT_audvisNpanel(AudVisButtonsPanel_Npanel):
     bl_label = "AudVis - Audio Visualizer"
 
     @classmethod
@@ -54,16 +51,6 @@ class AUDVIS_PT_audvis(Panel):
 
         col = layout.column(align=True)
         col.operator("audvis.forcereload", text="Reload AudVis", icon='FILE_REFRESH')
-
-
-class AUDVIS_PT_audvisScene(AUDVIS_PT_audvis, SequencerButtonsPanel):
-    @classmethod
-    def poll(cls, context):
-        return False  # !!! HIDE AUDVIS FROM PROPERTIES -> SCENE !!!
-
-
-class AUDVIS_PT_audvisNpanel(AUDVIS_PT_audvis, SequencerButtonsPanel_Npanel):
-    pass
 
 
 class AudvisWindowProperties(bpy.types.PropertyGroup):
@@ -102,7 +89,6 @@ def on_blendfile_save():
 
 
 classes = [
-              AUDVIS_PT_audvisScene,
               AUDVIS_PT_audvisNpanel,
               AudvisWindowProperties,
           ] \

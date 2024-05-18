@@ -15,17 +15,17 @@ from bpy.types import (
 )
 
 from . import install_lib
-from .buttonspanel import SequencerButtonsPanel_Npanel, SequencerButtonsPanel_Update
+from .buttonspanel import AudVisButtonsPanel_Npanel, SequencerButtonsPanel_Update
 from .realtime import input_device_options
 from .. import ui
 
 
 def on_npanelname_update(prefs, context):
-    SequencerButtonsPanel_Npanel.bl_category = prefs.npanel_name
+    AudVisButtonsPanel_Npanel.bl_category = prefs.npanel_name
 
     # unregister
     for cls in ui.classes:
-        if issubclass(cls, SequencerButtonsPanel_Npanel):
+        if issubclass(cls, AudVisButtonsPanel_Npanel):
             try:
                 bpy.utils.unregister_class(cls)
             except Exception as e:
@@ -34,7 +34,7 @@ def on_npanelname_update(prefs, context):
 
     # register
     for cls in ui.classes:
-        if issubclass(cls, SequencerButtonsPanel_Npanel) and not issubclass(cls, SequencerButtonsPanel_Update):
+        if issubclass(cls, AudVisButtonsPanel_Npanel) and not issubclass(cls, SequencerButtonsPanel_Update):
             bpy.utils.register_class(cls)
     for cls in ui.classes:
         if issubclass(cls, SequencerButtonsPanel_Update):

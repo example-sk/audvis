@@ -1,13 +1,12 @@
 import bpy
 from bpy.types import (
-    Panel,
     Operator,
     UIList,
 )
 
 from . import bake
 from .. import ui_lib
-from ..buttonspanel import SequencerButtonsPanel, SequencerButtonsPanel_Npanel
+from ..buttonspanel import AudVisButtonsPanel_Npanel
 from ..hz_label import hz_label, notes_label
 
 from .operators import (
@@ -42,7 +41,7 @@ class AUDVIS_UL_spectrogramList(UIList):
             layout.label(text="", icon=custom_icon)
 
 
-class AUDVIS_PT_spectrogram(Panel):
+class AUDVIS_PT_spectrogramNpanel(AudVisButtonsPanel_Npanel):
     bl_label = "Spectrogram"
 
     @classmethod
@@ -142,16 +141,7 @@ class AUDVIS_PT_spectrogram(Panel):
         col.prop(spect_props, "color")
 
 
-class AUDVIS_PT_spectrogramScene(AUDVIS_PT_spectrogram, SequencerButtonsPanel):
-    bl_parent_id = "AUDVIS_PT_audvisScene"
-
-
-class AUDVIS_PT_spectrogramNpanel(AUDVIS_PT_spectrogram, SequencerButtonsPanel_Npanel):
-    pass
-
-
-classes = bake.classes + [
-    AUDVIS_PT_spectrogramScene,
+classes = [
     AUDVIS_PT_spectrogramNpanel,
     AUDVIS_UL_spectrogramList,
     spectrogramRemove.AUDVIS_OT_spectrogramRemove,
@@ -159,4 +149,4 @@ classes = bake.classes + [
     spectrogramDuplicate.AUDVIS_OT_spectrogramDuplicate,
     spectrogramSingleToMulti.AUDVIS_OT_spectrogramSingleToMulti,
     # spectrogramMakeParticles.AUDVIS_OT_spectrogramMakeParticles,
-]
+] + bake.classes

@@ -1,12 +1,11 @@
 import sys
 
 import bpy
-from bpy.types import Panel
 
-from ..buttonspanel import SequencerButtonsPanel, SequencerButtonsPanel_Npanel
+from ..buttonspanel import AudVisButtonsPanel_Npanel
 
 
-class AUDVIS_PT_video(Panel):
+class AUDVIS_PT_videoNpanel(AudVisButtonsPanel_Npanel):
     bl_label = "Video Capture"
 
     @classmethod
@@ -56,14 +55,6 @@ class AUDVIS_PT_video(Panel):
             col.prop(context.scene.audvis, "video_contour_size")
 
 
-class AUDVIS_PT_videoScene(AUDVIS_PT_video, SequencerButtonsPanel):
-    bl_parent_id = "AUDVIS_PT_audvisScene"
-
-
-class AUDVIS_PT_videoNpanel(AUDVIS_PT_video, SequencerButtonsPanel_Npanel):
-    pass
-
-
 def on_blendfile_loaded():
     if hasattr(bpy.context, "scene"):
         img = bpy.context.scene.audvis.video_image
@@ -85,6 +76,5 @@ def unregister():
 
 
 classes = [
-    AUDVIS_PT_videoScene,
     AUDVIS_PT_videoNpanel,
 ]

@@ -1,9 +1,7 @@
-from bpy.types import (Panel)
-
-from ..buttonspanel import (SequencerButtonsPanel, SequencerButtonsPanel_Npanel)
+from ..buttonspanel import (AudVisButtonsPanel_Npanel)
 
 
-class AUDVIS_PT_partymode(Panel):
+class AUDVIS_PT_partymodeNpanel(AudVisButtonsPanel_Npanel):
     bl_label = "Party Mode"
 
     @classmethod
@@ -28,15 +26,6 @@ class AUDVIS_PT_partymode(Panel):
             col.operator("preferences.reset_default_theme")
 
 
-class AUDVIS_PT_partymodeScene(AUDVIS_PT_partymode, SequencerButtonsPanel):
-    bl_parent_id = "AUDVIS_PT_audvisScene"
-
-
-class AUDVIS_PT_partymodeNpanel(AUDVIS_PT_partymode, SequencerButtonsPanel_Npanel):
-    pass
-
-
 classes = [
     AUDVIS_PT_partymodeNpanel,
-    AUDVIS_PT_partymodeScene,
 ]

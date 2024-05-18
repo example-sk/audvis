@@ -1,9 +1,8 @@
 import bpy
 import os
 from bpy.types import Menu
-from bpy.types import Panel
 
-from .buttonspanel import SequencerButtonsPanel, SequencerButtonsPanel_Npanel
+from .buttonspanel import AudVisButtonsPanel_Npanel
 
 
 class AUDVIS_MT_scripttemplates(Menu):
@@ -30,7 +29,7 @@ class AUDVIS_OT_scriptmenuopen(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class AUDVIS_PT_examplescripts(Panel):
+class AUDVIS_PT_examplescriptsNpanel(AudVisButtonsPanel_Npanel):
     bl_label = "Script Templates"
 
     scriptlist = None
@@ -46,14 +45,6 @@ class AUDVIS_PT_examplescripts(Panel):
         col.operator("audvis.scriptmenuopen", text="Choose Script Template")
 
 
-class AUDVIS_PT_examplescriptsScene(AUDVIS_PT_examplescripts, SequencerButtonsPanel):
-    bl_parent_id = "AUDVIS_PT_audvisScene"
-
-
-class AUDVIS_PT_examplescriptsNpanel(AUDVIS_PT_examplescripts, SequencerButtonsPanel_Npanel):
-    pass
-
-
 def register():
     if hasattr(bpy.types, 'TEXT_MT_templates'):
         bpy.types.TEXT_MT_templates.append(AUDVIS_MT_scripttemplates.draw_mainmenu)
@@ -65,7 +56,6 @@ def unregister():
 
 
 classes = [
-    AUDVIS_PT_examplescriptsScene,
     AUDVIS_PT_examplescriptsNpanel,
     AUDVIS_MT_scripttemplates,
     AUDVIS_OT_scriptmenuopen

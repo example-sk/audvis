@@ -1,11 +1,10 @@
 import bpy
 from bpy.types import (
-    Panel,
     Operator,
 )
 
 from . import ui_lib
-from .buttonspanel import SequencerButtonsPanel, SequencerButtonsPanel_Npanel
+from .buttonspanel import AudVisButtonsPanel_Npanel
 from .hz_label import hz_label, notes_label
 
 
@@ -58,7 +57,7 @@ def gpencil_layer_changed(self, context):
     self.gpencil_layer_changed = True
 
 
-class AUDVIS_PT_shapemodifier(Panel):
+class AUDVIS_PT_shapemodifierNpanel(AudVisButtonsPanel_Npanel):
     bl_label = "Shape Modifier"
 
     @classmethod
@@ -312,18 +311,8 @@ class AUDVIS_OT_shapemodifierunbake(Operator):
         layer = obj.data.uv_layers['audvis to']
         obj.data.uv_layers.remove(layer)
 
-
-class AUDVIS_PT_shapemodifierScene(AUDVIS_PT_shapemodifier, SequencerButtonsPanel):
-    bl_parent_id = "AUDVIS_PT_audvisScene"
-
-
-class AUDVIS_PT_shapemodifierNpanel(AUDVIS_PT_shapemodifier, SequencerButtonsPanel_Npanel):
-    pass
-
-
 classes = [
     AUDVIS_OT_shapemodifierbake,
     AUDVIS_OT_shapemodifierunbake,
-    AUDVIS_PT_shapemodifierScene,
     AUDVIS_PT_shapemodifierNpanel,
 ]

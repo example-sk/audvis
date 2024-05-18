@@ -2,12 +2,9 @@ import glob
 import os
 
 import bpy
-from bpy.types import (
-    Operator,
-    Panel,
-)
+from bpy.types import Operator
 
-from ..buttonspanel import (SequencerButtonsPanel_Update, SequencerButtonsPanel_Npanel, SequencerButtonsPanel)
+from ..buttonspanel import (SequencerButtonsPanel_Update, AudVisButtonsPanel_Npanel)
 
 
 # TODO: self.report({'INFO'},"This ma take some time")
@@ -146,7 +143,8 @@ class AUDVIS_OT_spectrogrambake(Operator):
             return []
 
 
-class AUDVIS_PT_spectrogrambake(Panel, SequencerButtonsPanel_Update):
+class AUDVIS_PT_spectrogrambakeNpanel(AudVisButtonsPanel_Npanel):
+    bl_parent_id = "AUDVIS_PT_spectrogramNpanel"
     bl_label = "Bake Spectrogram"
 
     @classmethod
@@ -175,16 +173,7 @@ class AUDVIS_PT_spectrogrambake(Panel, SequencerButtonsPanel_Update):
         btn.show_directory = props.bake_show_directory
 
 
-class AUDVIS_PT_spectrogrambakeScene(AUDVIS_PT_spectrogrambake, SequencerButtonsPanel):
-    bl_parent_id = "AUDVIS_PT_spectrogramScene"
-
-
-class AUDVIS_PT_spectrogrambakeNpanel(AUDVIS_PT_spectrogrambake, SequencerButtonsPanel_Npanel):
-    bl_parent_id = "AUDVIS_PT_spectrogramNpanel"
-
-
 classes = [
     AUDVIS_OT_spectrogrambake,
     AUDVIS_PT_spectrogrambakeNpanel,
-    AUDVIS_PT_spectrogrambakeScene,
 ]

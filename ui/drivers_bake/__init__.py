@@ -1,7 +1,6 @@
 import bpy
-from bpy.types import Panel
 
-from ..buttonspanel import SequencerButtonsPanel, SequencerButtonsPanel_Npanel
+from ..buttonspanel import AudVisButtonsPanel_Npanel
 
 _is_baking = False
 
@@ -159,7 +158,7 @@ class AUDVIS_OT_BakeDrivers(bpy.types.Operator):
         _is_baking = False
 
 
-class AUDVIS_PT_BakeDrivers(Panel):
+class AUDVIS_PT_BakeDriversNpanel(AudVisButtonsPanel_Npanel):
     bl_label = "Bake Drivers"
 
     @classmethod
@@ -198,16 +197,7 @@ class AUDVIS_PT_BakeDrivers(Panel):
                                 box.prop(fcurve.driver, "expression", text="")
 
 
-class AUDVIS_PT_BakeDriversScene(AUDVIS_PT_BakeDrivers, SequencerButtonsPanel):
-    bl_parent_id = "AUDVIS_PT_audvisScene"
-
-
-class AUDVIS_PT_BakeDriversNpanel(AUDVIS_PT_BakeDrivers, SequencerButtonsPanel_Npanel):
-    pass
-
-
 classes = [
     AUDVIS_OT_BakeDrivers,
-    AUDVIS_PT_BakeDriversScene,
     AUDVIS_PT_BakeDriversNpanel,
 ]

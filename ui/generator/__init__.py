@@ -1,8 +1,7 @@
 import bpy
-from bpy.types import Panel
 
 from .generate import Generator
-from ..buttonspanel import SequencerButtonsPanel, SequencerButtonsPanel_Npanel
+from ..buttonspanel import AudVisButtonsPanel_Npanel
 from ..hz_label import hz_label, notes_label
 
 
@@ -14,7 +13,7 @@ def collection_poll(self, coll):
     return "AudVisExample" not in coll.name
 
 
-class AUDVIS_PT_Generator(Panel):
+class AUDVIS_PT_GeneratorNpanel(AudVisButtonsPanel_Npanel):
     bl_label = "Generate Example Objects"
 
     xcount: bpy.props.IntProperty(default=5)
@@ -154,14 +153,6 @@ class AUDVIS_PT_Generator(Panel):
         col.operator("audvis.generate")
 
 
-class AUDVIS_PT_GeneratorScene(AUDVIS_PT_Generator, SequencerButtonsPanel):
-    bl_parent_id = "AUDVIS_PT_audvisScene"
-
-
-class AUDVIS_PT_GeneratorNpanel(AUDVIS_PT_Generator, SequencerButtonsPanel_Npanel):
-    pass
-
-
 class AUDVIS_OT_Generate(bpy.types.Operator):
     bl_idname = "audvis.generate"
     bl_label = "Generate AudVis Example"
@@ -173,6 +164,5 @@ class AUDVIS_OT_Generate(bpy.types.Operator):
 
 classes = [
     AUDVIS_OT_Generate,
-    AUDVIS_PT_GeneratorScene,
     AUDVIS_PT_GeneratorNpanel,
 ]

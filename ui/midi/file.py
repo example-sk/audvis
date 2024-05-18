@@ -1,13 +1,13 @@
 import sys
 
-from bpy.types import (Operator, Panel, UIList)
+from bpy.types import (Operator, UIList)
 from .operators import (
     midiFileRemove,
     midiFileOpen,
     midiTrackRemove,
 )
 
-from ..buttonspanel import (SequencerButtonsPanel, SequencerButtonsPanel_Npanel)
+from ..buttonspanel import (AudVisButtonsPanel_Npanel)
 from .utils import (get_selected_midi_file, get_selected_midi_track)
 
 
@@ -52,7 +52,7 @@ class AUDVIS_UL_midiFileList(UIList):
             layout.label(text=item.name, icon=custom_icon)
 
 
-class AUDVIS_PT_midiFile(Panel):
+class AUDVIS_PT_midiFileNpanel(AudVisButtonsPanel_Npanel):
     bl_label = "Midi File"
 
     @classmethod
@@ -98,19 +98,10 @@ class AUDVIS_PT_midiFile(Panel):
         col.operator('audvis.midi_track_remove')
 
 
-class AUDVIS_PT_midiFileScene(AUDVIS_PT_midiFile, SequencerButtonsPanel):
-    bl_parent_id = "AUDVIS_PT_audvisScene"
-
-
-class AUDVIS_PT_midiFileNpanel(AUDVIS_PT_midiFile, SequencerButtonsPanel_Npanel):
-    pass
-
-
 classes = [
     AUDVIS_UL_midiFileList,
     AUDVIS_UL_midiTrackList,
     AUDVIS_PT_midiFileNpanel,
-    AUDVIS_PT_midiFileScene,
     midiFileOpen.AUDVIS_OT_midiFileOpen,
     midiFileRemove.AUDVIS_OT_midiFileRemove,
     midiTrackRemove.AUDVIS_OT_midiTrackRemove,

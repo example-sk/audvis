@@ -3,7 +3,7 @@ import sys
 
 import bpy
 
-from ..buttonspanel import SequencerButtonsPanel, SequencerButtonsPanel_Npanel
+from ..buttonspanel import AudVisButtonsPanel_Npanel
 
 
 def _get_audvis():
@@ -70,7 +70,9 @@ def get_available_formats(self, context):
         return []
 
 
-class AUDVIS_PT_realtimeRecord(bpy.types.Panel):
+class AUDVIS_PT_realtimeRecordNpanel(AudVisButtonsPanel_Npanel):
+    bl_parent_id = "AUDVIS_PT_realtimeNpanel"
+    bl_options = {'DEFAULT_CLOSED'}
     bl_label = "Record Audio"
 
     @classmethod
@@ -99,19 +101,8 @@ class AUDVIS_PT_realtimeRecord(bpy.types.Panel):
             col.operator("audvis.install", text="Install python packages")
 
 
-class AUDVIS_PT_realtimeRecordScene(AUDVIS_PT_realtimeRecord, SequencerButtonsPanel):
-    bl_parent_id = "AUDVIS_PT_realtimeScene"
-    bl_options = {'DEFAULT_CLOSED'}
-
-
-class AUDVIS_PT_realtimeRecordNpanel(AUDVIS_PT_realtimeRecord, SequencerButtonsPanel_Npanel):
-    bl_parent_id = "AUDVIS_PT_realtimeNpanel"
-    bl_options = {'DEFAULT_CLOSED'}
-
-
 classes = [
     AUDVIS_OT_RealtimeRecordStart,
     AUDVIS_OT_RealtimeRecordStop,
-    AUDVIS_PT_realtimeRecordScene,
     AUDVIS_PT_realtimeRecordNpanel,
 ]

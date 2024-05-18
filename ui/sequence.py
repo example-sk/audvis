@@ -1,12 +1,8 @@
 import bpy
-from bpy.types import (
-    Panel,
-    Operator,
-    UIList,
-)
+from bpy.types import (Operator, UIList)
 import audvis
 
-from .buttonspanel import SequencerButtonsPanel, SequencerButtonsPanel_Npanel
+from .buttonspanel import AudVisButtonsPanel_Npanel
 
 
 def _seq_has_error(name):
@@ -115,7 +111,7 @@ class AUDVIS_OT_SequenceAdd(Operator):
         return {"FINISHED"}
 
 
-class AUDVIS_PT_sequence(Panel):
+class AUDVIS_PT_sequenceNpanel(AudVisButtonsPanel_Npanel):
     bl_label = "Sequence Analyzer"
 
     @classmethod
@@ -151,19 +147,10 @@ class AUDVIS_PT_sequence(Panel):
         col.operator("audvis.framealign")
 
 
-class AUDVIS_PT_sequenceScene(AUDVIS_PT_sequence, SequencerButtonsPanel):
-    bl_parent_id = "AUDVIS_PT_audvisScene"
-
-
-class AUDVIS_PT_sequenceNpanel(AUDVIS_PT_sequence, SequencerButtonsPanel_Npanel):
-    pass
-
-
 classes = [
     AUDVIS_OT_FrameAlign,
     AUDVIS_OT_SequenceRemove,
     AUDVIS_OT_SequenceAdd,
-    AUDVIS_PT_sequenceScene,
     AUDVIS_PT_sequenceNpanel,
     AUDVIS_UL_soundSequenceList,
 ]

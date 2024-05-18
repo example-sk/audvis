@@ -1,10 +1,9 @@
 import sys
 
 import bpy
-from bpy.types import Panel
 
 from . import recording
-from ..buttonspanel import SequencerButtonsPanel, SequencerButtonsPanel_Npanel
+from ..buttonspanel import AudVisButtonsPanel_Npanel
 
 
 def input_device_options(self, context):
@@ -37,7 +36,7 @@ class AUDVIS_OT_RealtimeReloadDevices(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class AUDVIS_PT_realtime(Panel):
+class AUDVIS_PT_realtimeNpanel(AudVisButtonsPanel_Npanel):
     bl_label = "Real Time Analyzer"
 
     @classmethod
@@ -67,14 +66,6 @@ class AUDVIS_PT_realtime(Panel):
             col.label(text="Error: " + err)
 
 
-class AUDVIS_PT_realtimeScene(AUDVIS_PT_realtime, SequencerButtonsPanel):
-    bl_parent_id = "AUDVIS_PT_audvisScene"
-
-
-class AUDVIS_PT_realtimeNpanel(AUDVIS_PT_realtime, SequencerButtonsPanel_Npanel):
-    pass
-
-
 def unregister():
     try:
         sys.modules['audvis'].audvis.realtime_analyzer.kill()
@@ -84,7 +75,6 @@ def unregister():
 
 
 classes = [
-              AUDVIS_PT_realtimeScene,
               AUDVIS_PT_realtimeNpanel,
               AUDVIS_OT_RealtimeReloadDevices,
           ] + recording.classes

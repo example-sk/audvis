@@ -3,11 +3,11 @@ from glob import glob
 import os
 import subprocess
 import sys
-from bpy.types import (Panel, UIList, Operator)
+from bpy.types import (UIList, Operator)
 
 from ...utils import midi_number_to_note
 from .. import install_lib
-from ..buttonspanel import (SequencerButtonsPanel, SequencerButtonsPanel_Npanel)
+from ..buttonspanel import (AudVisButtonsPanel_Npanel)
 from ...analyzer.midi_realtime import _MidiNoteMessage
 from ...analyzer.midi_realtime.midi_thread import _MidiControlMessage
 
@@ -184,7 +184,7 @@ class AUDVIS_UL_midiInputList(UIList):
             layout.label(text="", icon=custom_icon)
 
 
-class AUDVIS_PT_midiRealtime(Panel):
+class AUDVIS_PT_midiRealtimeNpanel(AudVisButtonsPanel_Npanel):
     bl_label = "Midi Realtime"
 
     @classmethod
@@ -222,17 +222,8 @@ class AUDVIS_PT_midiRealtime(Panel):
         col.operator("audvis.midi_realtime_debug", icon="INFO")
 
 
-class AUDVIS_PT_midiRealtimeScene(AUDVIS_PT_midiRealtime, SequencerButtonsPanel):
-    bl_parent_id = "AUDVIS_PT_audvisScene"
-
-
-class AUDVIS_PT_midiRealtimeNpanel(AUDVIS_PT_midiRealtime, SequencerButtonsPanel_Npanel):
-    pass
-
-
 classes = [
     AUDVIS_PT_midiRealtimeNpanel,
-    AUDVIS_PT_midiRealtimeScene,
     AUDVIS_UL_midiInputList,
     AUDVIS_OT_midiInputAdd,
     AUDVIS_OT_midiInputRemove,

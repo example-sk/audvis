@@ -1,7 +1,5 @@
-from bpy.types import (Panel)
-
 from . import presets
-from ..buttonspanel import SequencerButtonsPanel, SequencerButtonsPanel_Npanel
+from ..buttonspanel import AudVisButtonsPanel_Npanel
 
 
 def get_sample_calc(self):
@@ -16,7 +14,7 @@ def get_sample_calc(self):
     return v
 
 
-class AUDVIS_PT_values(Panel):
+class AUDVIS_PT_valuesNpanel(AudVisButtonsPanel_Npanel):
     bl_label = "Driver Values"
 
     @classmethod
@@ -96,15 +94,6 @@ class AUDVIS_PT_values(Panel):
                 col.prop(props, "adsr_release")
 
 
-class AUDVIS_PT_valuesScene(AUDVIS_PT_values, SequencerButtonsPanel):
-    bl_parent_id = "AUDVIS_PT_audvisScene"
-
-
-class AUDVIS_PT_valuesNpanel(AUDVIS_PT_values, SequencerButtonsPanel_Npanel):
-    pass
-
-
 classes = presets.classes + [
-    AUDVIS_PT_valuesScene,
     AUDVIS_PT_valuesNpanel,
 ]

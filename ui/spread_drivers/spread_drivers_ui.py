@@ -1,11 +1,9 @@
-from bpy.types import Panel
-
 from .expression_builder import build_expression
 from .. import ui_lib
-from ..buttonspanel import SequencerButtonsPanel, SequencerButtonsPanel_Npanel
+from ..buttonspanel import AudVisButtonsPanel_Npanel
 
 
-class AUDVIS_PT_spreaddrivers(Panel):
+class AUDVIS_PT_spreaddriversNpanel(AudVisButtonsPanel_Npanel):
     bl_label = "Spread the Drivers"
 
     @classmethod
@@ -46,15 +44,6 @@ class AUDVIS_PT_spreaddrivers(Panel):
         col.label(text=build_expression(props))
 
 
-class AUDVIS_PT_spreaddriversScene(AUDVIS_PT_spreaddrivers, SequencerButtonsPanel):
-    bl_parent_id = "AUDVIS_PT_audvisScene"
-
-
-class AUDVIS_PT_spreaddriversNpanel(AUDVIS_PT_spreaddrivers, SequencerButtonsPanel_Npanel):
-    pass
-
-
 classes = [
-    AUDVIS_PT_spreaddriversScene,
     AUDVIS_PT_spreaddriversNpanel,
 ]
