@@ -51,3 +51,4 @@ and change the "Install directory" to "Blender" instead of default
 ### MacOs:
 - Mac computers come with different processor types. Only tested with MacBook Air mid 2012. It would be nice if you test this on other hardware and let me know if it worked.
 - For Realtime Analyzer, you may need to install Soundflower or similar software ([video instructions here](https://www.youtube.com/results?search_query=soundflower+macos).
+- Warning: it's possible you will need to run Blender from terminal to use realtime audio or video capture features. MacOs has a strict security feature that doesn't allow an app to use, for example, Camera, unless the app asks for a permission. Blender itself doesn't ask for it, so you need to run Blender from terminal, so Terminal can ask for permission.   
