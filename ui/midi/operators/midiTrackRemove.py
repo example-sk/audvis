@@ -14,7 +14,7 @@ class AUDVIS_OT_midiTrackRemove(Operator):
 
     @classmethod
     def poll(cls, context):
-        if not sys.modules['audvis'].audvis.is_midi_realtime_supported():
+        if not bpy.audvis.is_midi_realtime_supported():
             return False
         if get_selected_midi_track(context) is None:
             return False

@@ -1,8 +1,6 @@
 import bpy
 import math
 
-import audvis
-
 for g in bpy.data.grease_pencils:
     bpy.data.grease_pencils.remove(g)
 
@@ -60,4 +58,4 @@ def callback(driver):
 for j in range(init_length):
     callback(None)
 
-audvis.register_script("test", callback)
+bpy.audvis.register_script("test", callback)

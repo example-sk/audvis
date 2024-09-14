@@ -1,11 +1,10 @@
-import sys
-
 from bpy.types import (Operator, UIList)
 from .operators import (
     midiFileRemove,
     midiFileOpen,
     midiTrackRemove,
 )
+import bpy
 
 from ..buttonspanel import (AudVisButtonsPanel_Npanel)
 from .utils import (get_selected_midi_file, get_selected_midi_track)
@@ -66,7 +65,7 @@ class AUDVIS_PT_midiFileNpanel(AudVisButtonsPanel_Npanel):
         layout = self.layout
         props = context.scene.audvis.midi_file
         col = layout.column(align=True)
-        supported = sys.modules['audvis'].audvis.is_midi_realtime_supported()
+        supported = bpy.audvis.is_midi_realtime_supported()
         if not supported:
             col.label(text="Midi files not supported. Install mido first:")
             col.operator("audvis.install", text="Install python packages")

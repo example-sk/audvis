@@ -6,8 +6,6 @@ import math
 
 import bpy
 
-import audvis
-
 POINTS_COUNT = 30
 WIDTH = 5
 
@@ -53,4 +51,4 @@ def callback(driver):
         point.handle_left = (loc[0] - xxx, loc[1], loc[2])
 
 
-audvis.register_script("test", callback)
+bpy.audvis.register_script("test", callback)

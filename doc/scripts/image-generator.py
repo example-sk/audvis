@@ -5,8 +5,6 @@ press ALT+P to run this script
 import math
 import bpy
 
-import audvis
-
 freq_per_pixel = 6.1
 size = [40, 40]  # Don't put too high numbers here. You will regret it very soon!
 name = 'audvis'
@@ -31,4 +29,4 @@ def callback(driver):
     img.pixels = arr
 
 
-audvis.register_script("test", callback)
+bpy.audvis.register_script("test", callback)

@@ -65,7 +65,7 @@ def register():
     bpy.types.Object.audvis = bpy.props.PointerProperty(type=props.obj.AudvisObjectProperties)
     bpy.types.SoundSequence.audvis = bpy.props.PointerProperty(type=props.sequence.AudvisSequenceProperties)
     bpy.types.Window.audvis = bpy.props.PointerProperty(type=AudvisWindowProperties)
-    preferences.on_npanelname_update(bpy.context.preferences.addons['audvis'].preferences, bpy.context)
+    preferences.on_npanelname_update(bpy.context.preferences.addons[bpy.audvis._module_name].preferences, bpy.context)
 
 
 def unregister():

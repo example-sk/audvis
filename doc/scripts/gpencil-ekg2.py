@@ -1,7 +1,5 @@
 import bpy
 
-import audvis
-
 for g in bpy.data.grease_pencils:
     bpy.data.grease_pencils.remove(g)
 
@@ -39,4 +37,4 @@ def callback(driver):
         p.co[2] = j / 4 + val / 100 - 1.7
 
 
-audvis.register_script("test", callback)
+bpy.audvis.register_script("test", callback)

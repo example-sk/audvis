@@ -4,8 +4,6 @@ press ALT+P to run this script
 
 import bpy
 
-import audvis
-
 curve = bpy.context.scene.objects["BezierCurve"].data
 
 
@@ -29,4 +27,4 @@ def callback(driver):
     point.handle_right = point.co
 
 
-audvis.register_script("test", callback)
+bpy.audvis.register_script("test", callback)

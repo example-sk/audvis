@@ -5,8 +5,6 @@ press ALT+P to run this script
 import bpy
 import cv2
 
-import audvis
-
 OBJECT_NAME = "video to gpencil"
 if OBJECT_NAME in bpy.data.objects:
     bpy.data.objects.remove(bpy.data.objects[OBJECT_NAME])
@@ -50,7 +48,7 @@ def callback(driver):
                 0
             )
 
-callback(audvis.audvis.driver)
+callback(bpy.audvis.driver)
 
 
-audvis.register_script("test", callback)
+bpy.audvis.register_script("test", callback)

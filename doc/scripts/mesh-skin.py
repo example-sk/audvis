@@ -4,8 +4,6 @@ press ALT+P to run this script
 
 import bpy
 
-import audvis
-
 bpy.ops.curve.primitive_bezier_circle_add()
 circle = bpy.context.object
 
@@ -38,4 +36,4 @@ def callback(driver):
     skin_vert.radius[1] = driver(200, 300) / 50 + .03
 
 
-audvis.register_script("test", callback)
+bpy.audvis.register_script("test", callback)

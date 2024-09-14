@@ -7,7 +7,7 @@ from ..buttonspanel import AudVisButtonsPanel_Npanel
 
 
 def _get_audvis():
-    return sys.modules['audvis'].audvis
+    return bpy.audvis
 
 
 def _poll():
@@ -77,16 +77,16 @@ class AUDVIS_PT_realtimeRecordNpanel(AudVisButtonsPanel_Npanel):
 
     @classmethod
     def poll(cls, context):
-        return sys.modules['audvis'].audvis.is_realtime_supported()
+        return bpy.audvis.is_realtime_supported()
 
     def draw(self, context):
         col = self.layout.column(align=True)
-        if sys.modules['audvis'].audvis.is_recording_supported():
-            if sys.modules['audvis'].audvis.realtime_analyzer is None:
-                # sys.modules['audvis'].audvis.update_data(context.scene) # wrong context
+        if bpy.audvis.is_recording_supported():
+            if bpy.audvis.realtime_analyzer is None:
+                # bpy.audvis.update_data(context.scene) # wrong context
                 pass
             try:
-                seconds = sys.modules['audvis'].audvis.realtime_analyzer.recorder.seconds
+                seconds = bpy.audvis.realtime_analyzer.recorder.seconds
             except:
                 seconds = 0
             minutes = math.floor(seconds / 60)

@@ -10,11 +10,11 @@ class AUDVIS_OT_ForceReload(bpy.types.Operator):
     def execute(self, context):
         # this looks horrible, but it doesn't work if executed just once
         bpy.ops.preferences.addon_refresh()
-        sys.modules['audvis'].unregister()
-        sys.modules['audvis'].register()
+        sys.modules[bpy.audvis._module_name].unregister()
+        sys.modules[bpy.audvis._module_name].register()
         bpy.ops.preferences.addon_refresh()
-        sys.modules['audvis'].unregister()
-        sys.modules['audvis'].register()
+        sys.modules[bpy.audvis._module_name].unregister()
+        sys.modules[bpy.audvis._module_name].register()
         bpy.ops.preferences.addon_refresh()
         return {"CANCELLED"}  # FINISHED causes crash
 

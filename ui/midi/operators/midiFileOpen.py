@@ -3,6 +3,7 @@ import sys
 from bpy.types import (
     Operator,
 )
+import bpy
 from bpy_extras.io_utils import ImportHelper
 
 from .. import midi_file_baker
@@ -27,7 +28,7 @@ class AUDVIS_OT_midiFileOpen(Operator, ImportHelper):
 
     @classmethod
     def poll(cls, context):
-        return sys.modules['audvis'].audvis.is_midi_realtime_supported()
+        return bpy.audvis.is_midi_realtime_supported()
 
     def execute(self, context):
         midi_file_baker.bake(context.scene, self.filepath, self.strip_silent_start)

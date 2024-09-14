@@ -1,5 +1,6 @@
 import collections
 import os
+import importlib
 import re
 import subprocess
 import sys
@@ -166,7 +167,10 @@ class MidiThread(threading.Thread):
         return False
 
     def _create_input(self, device_name):
-        libs_path = install_lib.get_libs_path_latest()
+        mido_spec = importlib.util.find_spec("mido")
+        if not mido_spec:
+            return []
+        libs_path = os.path.dirname(os.path.dirname(mido_spec.origin))
         add_params = []
         if libs_path is not None:
             add_params = [

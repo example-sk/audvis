@@ -1,5 +1,3 @@
-import sys
-
 import bpy
 
 from ..buttonspanel import AudVisButtonsPanel_Npanel
@@ -18,7 +16,7 @@ class AUDVIS_PT_videoNpanel(AudVisButtonsPanel_Npanel):
     def draw(self, context):
         col = self.layout.column(align=True)
         # col.enabled = context.scene.audvis.realtime_enable
-        supported = sys.modules['audvis'].audvis.is_video_supported()
+        supported = bpy.audvis.is_video_supported()
         if supported:
             col.prop(context.scene.audvis, "video_webcam_index")
             if context.scene.audvis.video_webcam_enable:
@@ -38,7 +36,7 @@ class AUDVIS_PT_videoNpanel(AudVisButtonsPanel_Npanel):
         else:
             col.label(text="Video not supported. Install opencv first:")
             col.operator("audvis.install", text="Install python packages")
-        err = sys.modules['audvis'].audvis.get_video_error()
+        err = bpy.audvis.get_video_error()
         if err:
             col = self.layout.column(align=True)
             col.label(text="Error: " + err)
@@ -69,8 +67,8 @@ def on_blendfile_save():
 
 def unregister():
     try:
-        sys.modules['audvis'].audvis.video_analyzer.kill()
-        sys.modules['audvis'].audvis.video_analyzer = None
+        bpy.audvis.video_analyzer.kill()
+        bpy.audvis.video_analyzer = None
     except:
         pass
 

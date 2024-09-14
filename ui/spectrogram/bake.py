@@ -133,8 +133,7 @@ class AUDVIS_OT_spectrogrambake(Operator):
         if scene.audvis.spectrogram_meta.mode == 'single':
             if scene.audvis.spectrogram.enable:
                 if scene.audvis.spectrogram.image is None:
-                    from audvis import audvis
-                    audvis.spectrogram_generator.modify(bpy.context.scene)
+                    bpy.audvis.spectrogram_generator.modify(bpy.context.scene)
                 return [scene.audvis.spectrogram]
             return []
         elif scene.audvis.spectrogram_meta.mode == 'multi':

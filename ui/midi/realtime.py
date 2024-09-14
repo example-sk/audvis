@@ -1,12 +1,12 @@
 import bpy
 from glob import glob
 import os
+import importlib
 import subprocess
 import sys
 from bpy.types import (UIList, Operator)
 
 from ...utils import midi_number_to_note
-from .. import install_lib
 from ..buttonspanel import (AudVisButtonsPanel_Npanel)
 from ...analyzer.midi_realtime import _MidiNoteMessage
 from ...analyzer.midi_realtime.midi_thread import _MidiControlMessage
@@ -17,9 +17,12 @@ def input_device_options_with_none(self, context):
 
 
 def input_device_options(self, context):
-    audvis = sys.modules['audvis'].audvis
+    mido_spec = importlib.util.find_spec("mido")
+    if not mido_spec:
+        return []
+    audvis = bpy.audvis
     if audvis.midi_input_device_options is None:
-        libs_path = install_lib.get_libs_path_latest()
+        libs_path = os.path.dirname(os.path.dirname(mido_spec.origin))
         add_params = []
         if libs_path is not None:
             add_params = [
@@ -68,14 +71,14 @@ class AUDVIS_OT_midiRealtimeDebug(Operator):
         context.workspace.status_text_set('MIDI REALTIME DEBUG started')
         self.timer = context.window_manager.event_timer_add(.2, window=context.window)
         context.window_manager.modal_handler_add(self)
-        analyzer = sys.modules['audvis'].audvis.get_midi_realtime_analyzer(context.scene)
+        analyzer = bpy.audvis.get_midi_realtime_analyzer(context.scene)
         if analyzer is not None:
             analyzer.on_pre_frame(context.scene, context.scene.frame_current_final)
         return {'RUNNING_MODAL'}
 
     def modal(self, context, event):
         if event.type == 'TIMER':
-            analyzer = sys.modules['audvis'].audvis.get_midi_realtime_analyzer(context.scene)
+            analyzer = bpy.audvis.get_midi_realtime_analyzer(context.scene)
             if analyzer is not None:
                 analyzer.on_pre_frame(context.scene, context.scene.frame_current_final)
                 msg = analyzer.get_last_msg()
@@ -120,7 +123,7 @@ class AUDVIS_OT_midiRealtimeRestart(Operator):
         return True
 
     def execute(self, context):
-        audvis = sys.modules['audvis'].audvis
+        audvis = bpy.audvis
         analyzer = audvis.get_midi_realtime_analyzer(context.scene)
         if analyzer is not None:
             analyzer.restart()
@@ -137,7 +140,7 @@ class AUDVIS_OT_midiInputAdd(Operator):
         return True
 
     def execute(self, context):
-        audvis = sys.modules['audvis'].audvis
+        audvis = bpy.audvis
         audvis.midi_input_device_options = None
         props = context.scene.audvis.midi_realtime
         props.inputs.add()
@@ -198,7 +201,7 @@ class AUDVIS_PT_midiRealtimeNpanel(AudVisButtonsPanel_Npanel):
         layout = self.layout
         props = context.scene.audvis.midi_realtime
         col = layout.column(align=True)
-        supported = sys.modules['audvis'].audvis.is_midi_realtime_supported()
+        supported = bpy.audvis.is_midi_realtime_supported()
         if not supported:
             col.label(text="Midi realtime not supported. Install mido first:")
             col.operator("audvis.install", text="Install python packages")

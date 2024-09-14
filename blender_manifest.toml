@@ -1,0 +1,41 @@
+schema_version = "1.0.0"
+id = "audvis"
+version = "6.0.0"
+name = "AudVis"
+tagline = "Tools for awesome audio visualizations. Sound & Midi analyzers"
+maintainer = "example.sk <audvis@example.sk>"
+type = "add-on"
+website = "https://example.sk/audvis/"
+tags = ["Animation"]
+blender_version_min = "2.8.0"
+license = [
+    "SPDX:GPL-3.0-or-later",
+]
+platforms = ["windows-x64", "macos-arm64", "macos-x64", "linux-x64"]
+wheels = [
+    "./wheels/cffi-1.17.1-cp311-cp311-macosx_10_9_x86_64.whl",
+    "./wheels/cffi-1.17.1-cp311-cp311-macosx_11_0_arm64.whl",
+    "./wheels/cffi-1.17.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+    "./wheels/cffi-1.17.1-cp311-cp311-win_amd64.whl",
+    "./wheels/mido-1.3.2-py3-none-any.whl",
+    "./wheels/opencv_python-4.10.0.84-cp37-abi3-macosx_11_0_arm64.whl",
+    "./wheels/opencv_python-4.10.0.84-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+    "./wheels/opencv_python-4.10.0.84-cp37-abi3-win_amd64.whl",
+    "./wheels/packaging-23.2-py3-none-any.whl",
+    "./wheels/pycparser-2.22-py3-none-any.whl",
+    "./wheels/pygame-2.6.0-cp311-cp311-macosx_10_9_x86_64.whl",
+    "./wheels/pygame-2.6.0-cp311-cp311-macosx_11_0_arm64.whl",
+    "./wheels/pygame-2.6.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+    "./wheels/pygame-2.6.0-cp311-cp311-win_amd64.whl",
+    "./wheels/sounddevice-0.5.0-py3-none-any.whl",
+    "./wheels/sounddevice-0.5.0-py3-none-macosx_10_6_x86_64.macosx_10_6_universal2.whl",
+    "./wheels/sounddevice-0.5.0-py3-none-win_amd64.whl",
+    "./wheels/soundfile-0.12.1-py2.py3-none-macosx_10_9_x86_64.whl",
+    "./wheels/soundfile-0.12.1-py2.py3-none-macosx_11_0_arm64.whl",
+    "./wheels/soundfile-0.12.1-py2.py3-none-manylinux_2_31_x86_64.whl",
+    "./wheels/soundfile-0.12.1-py2.py3-none-win_amd64.whl",
+]
+
+[permissions]
+camera = "Put realtime camera into image"
+microphone = "Realtime music analyzing"

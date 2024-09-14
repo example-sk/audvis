@@ -7,7 +7,7 @@ from ..buttonspanel import AudVisButtonsPanel_Npanel
 
 
 def input_device_options(self, context):
-    audvis = sys.modules['audvis'].audvis
+    audvis = bpy.audvis
     if audvis.input_device_options is None:
         import sounddevice as sd
         ret = [
@@ -28,7 +28,7 @@ class AUDVIS_OT_RealtimeReloadDevices(bpy.types.Operator):
     bl_label = "Reconnect and reload device list"
 
     def execute(self, context):
-        audvis = sys.modules['audvis'].audvis
+        audvis = bpy.audvis
         audvis.input_device_options = None
         input_device_options(None, None)
         if audvis.realtime_analyzer:
@@ -49,8 +49,8 @@ class AUDVIS_PT_realtimeNpanel(AudVisButtonsPanel_Npanel):
     def draw(self, context):
         col = self.layout.column(align=True)
         # col.enabled = context.scene.audvis.realtime_enable
-        supported = sys.modules['audvis'].audvis.is_realtime_supported()
-        if context.preferences.addons['audvis'].preferences.realtime_device_use_global:
+        supported = bpy.audvis.is_realtime_supported()
+        if context.preferences.addons[bpy.audvis._module_name].preferences.realtime_device_use_global:
             col.label(text="Realtime device was set")
             col.label(text="in AudVis preferences")
         elif supported:
@@ -60,7 +60,7 @@ class AUDVIS_PT_realtimeNpanel(AudVisButtonsPanel_Npanel):
         else:
             col.label(text="Realtime not supported. Install sounddevice first:")
             col.operator("audvis.install", text="Install python packages")
-        err = sys.modules['audvis'].audvis.get_realtime_error()
+        err = bpy.audvis.get_realtime_error()
         col.prop(context.scene.audvis, 'realtime_switchscenes')
         if err:
             col.label(text="Error: " + err)
@@ -68,8 +68,8 @@ class AUDVIS_PT_realtimeNpanel(AudVisButtonsPanel_Npanel):
 
 def unregister():
     try:
-        sys.modules['audvis'].audvis.realtime_analyzer.kill()
-        sys.modules['audvis'].audvis.realtime_analyzer = None
+        bpy.audvis.realtime_analyzer.kill()
+        bpy.audvis.realtime_analyzer = None
     except:
         pass
 

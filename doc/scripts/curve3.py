@@ -1,8 +1,6 @@
 import bpy
 import random
 
-import audvis
-
 freq_range = 50
 curve = bpy.data.curves['BezierCircle']
 
@@ -20,4 +18,4 @@ def callback(driver):
             point.radius = val
 
 
-audvis.register_script("test", callback)
+bpy.audvis.register_script("test", callback)

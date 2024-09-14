@@ -1,5 +1,5 @@
 import bpy
-from audvis import audvis
+
 xcount = 10
 ycount = 100
 
@@ -17,4 +17,4 @@ def cb(driver):
             point.pressure = val
             point.co = (i * .3, j * .1, val)
 
-audvis.register_script('test', cb)
+bpy.audvis.register_script('test', cb)

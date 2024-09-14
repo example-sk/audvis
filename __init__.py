@@ -5,7 +5,7 @@ import sys
 bl_info = {
     "name": "AudVis - audio visualization driver",
     "author": "example.sk",
-    "version": (5, 2, 2),
+    "version": (6, 0, 0),
     "blender": (2, 80, 0),
     "location": "View 3D > Sidebar > AudVis Tab",
     "description": (
@@ -15,6 +15,8 @@ bl_info = {
 
 import bpy
 from bpy.app.handlers import persistent
+
+bpy._audvis_module = __package__
 
 from . import scripting
 from . import ui
@@ -45,6 +47,8 @@ def register2():
             _reload_modules()
 
     audvis = AudVis()
+    bpy.audvis = audvis
+    audvis._module_name = __package__
     register_script = audvis.register_script
     classes = ui.classes + scripting.classes
     for c in classes:
@@ -107,6 +111,7 @@ def unregister_syspath():
 
 
 def unregister():
+    global audvis
     unregister_syspath()  # probably useless
     unregister_keymaps()
     unregister2()
@@ -115,6 +120,8 @@ def unregister():
     bpy.app.handlers.load_post.remove(load_handler)
     bpy.app.handlers.save_pre.remove(save_pre_handler)
     bpy.app.driver_namespace.pop('audvis')
+    audvis = None
+    bpy.audvis = None
 
 
 ### keymaps

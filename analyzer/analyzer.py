@@ -4,8 +4,6 @@ import aud
 import bpy
 import numpy as np
 
-import audvis
-
 from ..utils import midi_note_to_number
 
 

@@ -1,14 +1,13 @@
 import bpy
 from bpy.types import (Operator, UIList)
-import audvis
 
 from .buttonspanel import AudVisButtonsPanel_Npanel
 
 
 def _seq_has_error(name):
-    if audvis.audvis.sequence_analyzers is None:
+    if bpy.audvis.sequence_analyzers is None:
         return False
-    analyzer = audvis.audvis.sequence_analyzers.get(name, None)
+    analyzer = bpy.audvis.sequence_analyzers.get(name, None)
     if analyzer is None:
         return False
     return analyzer.load_error is not None

@@ -44,7 +44,7 @@ def on_npanelname_update(prefs, context):
 class AudvisAddonPreferences(AddonPreferences):
     # this must match the add-on name, use '__package__'
     # when defining this in a submodule of a python package.
-    bl_idname = 'audvis'
+    bl_idname = bpy._audvis_module
 
     npanel_name: StringProperty(
         name="Panel Category",
@@ -114,7 +114,7 @@ class AudvisAddonPreferences(AddonPreferences):
         col = box.column()
         col.prop(self, "realtime_device_use_global")
         if self.realtime_device_use_global:
-            if sys.modules['audvis'].audvis.is_realtime_supported():
+            if bpy.audvis.is_realtime_supported():
                 col.prop(self, "realtime_device")
             else:
                 col.label(text="Realtime not supported. Install sounddevice first")
@@ -136,23 +136,23 @@ class AudvisAddonPreferences(AddonPreferences):
                               "sounddevice",
                               "Realtime analyzer",
                               "audvis.realtime_uninstall",
-                              sys.modules['audvis'].audvis.is_realtime_supported())
+                              bpy.audvis.is_realtime_supported())
         self._draw_module_row(box,
                               "cv2",
                               "Video camera",
                               "audvis.video_uninstall",
-                              sys.modules['audvis'].audvis.is_video_supported())
+                              bpy.audvis.is_video_supported())
         self._draw_module_row(box,
                               "soundfile",
                               "Sound recording",
                               "audvis.realtime_uninstall_soundrecorder",
-                              sys.modules['audvis'].audvis.is_recording_supported())
+                              bpy.audvis.is_recording_supported())
 
         self._draw_module_row(box,
                               "mido",
                               "MIDI realtime analyzer",
                               None,
-                              sys.modules['audvis'].audvis.is_midi_realtime_supported())
+                              bpy.audvis.is_midi_realtime_supported())
 
 
 classes = [

@@ -63,7 +63,7 @@ class PipInstaller(threading.Thread):
 
     def __init__(self):
         threading.Thread.__init__(self)
-        self._selected_target = bpy.context.preferences.addons['audvis'].preferences.pip_target
+        self._selected_target = bpy.context.preferences.addons[bpy.audvis._module_name].preferences.pip_target
 
     def run(self):
         self.cb()
@@ -90,7 +90,7 @@ class PipInstaller(threading.Thread):
 
     def reload_libs(self):
         importlib.invalidate_caches()
-        audvis = sys.modules['audvis'].audvis
+        audvis = bpy.audvis
         if audvis.is_realtime_supported(force=True):
             analyzer = audvis.realtime_analyzer
             if analyzer is not None:

@@ -6,8 +6,6 @@ import bpy
 import bpy
 import math
 
-import audvis
-
 object = bpy.data.objects['Cube']
 
 def deps_part_system():
@@ -58,4 +56,4 @@ def callback(driver):
 
 
 
-audvis.register_script("test", callback)
+bpy.audvis.register_script("test", callback)

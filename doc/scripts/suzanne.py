@@ -1,8 +1,6 @@
 import bpy
 import math
 
-import audvis
-
 freq_range = 10
 
 if 'Suzanne' in bpy.data.objects:
@@ -35,4 +33,4 @@ def callback(driver):
         )
 
 
-audvis.register_script("test", callback)
+bpy.audvis.register_script("test", callback)
