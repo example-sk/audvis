@@ -12,7 +12,7 @@ def _testing_mergetracks(mid):
         msgs = _testing_single_track(mid, mid.tracks[0])
         result.append({'name': mid.tracks[0].name, 'msgs': msgs})
     elif mid.type == 1:  # multi track midi file type
-        for track in mid.tracks[1:]:
+        for track in mid.tracks:
             # print('TRCK', track)
             msgs = _testing_single_track(mid, mido.midifiles.tracks.merge_tracks([mid.tracks[0], track]))
             result.append({'name': track.name, 'msgs': msgs})

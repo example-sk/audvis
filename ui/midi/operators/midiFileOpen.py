@@ -15,7 +15,7 @@ class AUDVIS_OT_midiFileOpen(Operator, ImportHelper):
     bl_description = ""
 
     filter_glob: bpy.props.StringProperty(
-        default='*.mid',
+        default='*.mid;*.midi',
         options={'HIDDEN'}
     )
 

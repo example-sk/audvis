@@ -3,6 +3,7 @@ import sys
 from bpy.types import (
     Operator,
 )
+import bpy
 
 from ..utils import get_selected_midi_track
 
