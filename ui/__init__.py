@@ -53,6 +53,17 @@ class AUDVIS_PT_audvisNpanel(AudVisButtonsPanel_Npanel):
         col.operator("audvis.forcereload", text="Reload AudVis", icon='FILE_REFRESH')
 
 
+class AUDVIS_OT_copyString(bpy.types.Operator):
+    bl_idname = "audvis.copy_string"
+    bl_label = "Copy to Clipboard"
+
+    value: bpy.props.StringProperty()
+
+    def execute(self, context):
+        context.window_manager.clipboard = self.value
+        return {"FINISHED"}
+
+
 class AudvisWindowProperties(bpy.types.PropertyGroup):
     ispartymode: bpy.props.BoolProperty(name="Is Party Mode Window", default=False)
 
@@ -89,6 +100,7 @@ def on_blendfile_save():
 
 
 classes = [
+              AUDVIS_OT_copyString,
               AUDVIS_PT_audvisNpanel,
               AudvisWindowProperties,
           ] \

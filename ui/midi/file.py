@@ -5,6 +5,7 @@ from .operators import (
     midiTrackRemove,
 )
 import bpy
+import re
 
 from ..buttonspanel import (AudVisButtonsPanel_Npanel)
 from .utils import (get_selected_midi_file, get_selected_midi_track)
@@ -51,6 +52,9 @@ class AUDVIS_UL_midiFileList(UIList):
             layout.label(text=item.name, icon=custom_icon)
 
 
+regexp = re.compile('ch([0-9]+)_(n|c)([0-9]+)')
+
+
 class AUDVIS_PT_midiFileNpanel(AudVisButtonsPanel_Npanel):
     bl_label = "Midi File"
 
@@ -91,10 +95,30 @@ class AUDVIS_PT_midiFileNpanel(AudVisButtonsPanel_Npanel):
 
     def _draw_track_info(self, col, context):
         track = get_selected_midi_track(context)
+        midifile = get_selected_midi_file(context)
         if track is None:
             return
         col.prop(track, "name")
         col.operator('audvis.midi_track_remove')
+        # col = layout.column(align=True)
+        for key in track.keys():
+            regexp_result = regexp.match(key)
+            if regexp_result:
+                channel = regexp_result.group(1)
+                type = regexp_result.group(2)
+                note = regexp_result.group(3)
+                col.label(text="Driver expression (example):")
+                expr = "audvis({}={}, ch={}, track={}, file={})".format(
+                    "midi" if type == 'n' else "midi_control",
+                    int(note),
+                    int(channel),
+                    repr(track.name),
+                    repr(midifile.name)
+                )
+                col.label(text=expr)
+                op = col.operator("audvis.copy_string", text="Copy Driver Expression to Clipboard")
+                op.value = expr
+                break
 
 
 classes = [
