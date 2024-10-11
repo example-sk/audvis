@@ -7,7 +7,7 @@ maintainer = "example.sk <audvis@example.sk>"
 type = "add-on"
 website = "https://example.sk/audvis/"
 tags = ["Animation"]
-blender_version_min = "2.8.0"
+blender_version_min = "4.2.0"
 license = [
     "SPDX:GPL-3.0-or-later",
 ]
