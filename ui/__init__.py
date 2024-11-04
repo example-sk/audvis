@@ -21,6 +21,7 @@ from . import (
     midi,
     spread_drivers,
     bge,
+    dawscene
 )
 from .buttonspanel import AudVisButtonsPanel_Npanel
 
@@ -123,4 +124,5 @@ classes = [
           + install_ui.classes \
           + preferences.classes \
           + bge.classes \
+          + dawscene.classes \
           + []
