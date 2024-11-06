@@ -50,7 +50,7 @@ class AUDVIS_OT_DawSceneTo3D(bpy.types.Operator, bpy_extras.io_utils.ImportHelpe
                 vertex.co[1] = -y
                 mesh.attributes['width'].data[-1].value = float(clip.duration)
                 mesh.attributes['height'].data[-1].value = float(.1)
-                mesh.attributes['layer'].data[-1].value = 1
+                mesh.attributes['layer'].data[-1].value = 0
                 mesh.attributes['clr'].data[-1].color = clip.color
 
         obj = bpy.data.objects.new('dawscene', mesh)
@@ -59,10 +59,16 @@ class AUDVIS_OT_DawSceneTo3D(bpy.types.Operator, bpy_extras.io_utils.ImportHelpe
 
         mod.node_group = bpy.data.node_groups['dawscene']
         keyframe_path = mod.path_from_id('["Input_5"]')
-        mod['Input_5'] = 0.0
-        obj.keyframe_insert(data_path=keyframe_path, frame=1)
-        mod['Input_5'] = 1.0
-        obj.keyframe_insert(data_path=keyframe_path, frame=100)
+        mod['Input_5'] = 0
+        for time_point in dawscene.calc_tempo_to_time():
+            mod['Input_5'] = time_point[1]
+            obj.keyframe_insert(data_path=keyframe_path, frame=time_point[0] * scene.render.fps * scene.render.fps_base + scene.frame_start)
+        for keyframe_point in obj.animation_data.action.fcurves[0].keyframe_points:
+            keyframe_point.interpolation = 'LINEAR'
+        bevel = obj.modifiers.new(name="Bevel", type="BEVEL")
+        bevel.width=.025
+        bevel.segments=3
+
 
     def execute(self, context):
         if not self.filepath:

@@ -3,13 +3,12 @@ import pathlib
 from xml.etree import ElementTree
 from pprint import pp
 
-from ..scene import (Scene, Track, Clip, Note, Group)
+from ..scene import (Scene, Track, Clip, Note, TempoEvent)
 
 
 def parse(filepath) -> Scene:
     zip = zipfile.ZipFile(file=filepath, mode='r')
     xml = ElementTree.parse(zip.open('project.xml'))
-    DawProjectParser(xml)
     return DawProjectParser(xml).scene
 
 
@@ -24,9 +23,36 @@ class DawProjectParser:
         self.xml = xml
         self.scene = Scene()
         self.all_tracks = {}
+        self.read_tempo()
         self.read_tracks()
         self.read_lines()
-        self.scene.print()
+        self.scene.calc_duration()
+        print(self.scene.calc_tempo_to_time())
+        # self.scene.print()
+
+    def read_tempo(self):
+        tempo_el = self.xml.find('./Transport/Tempo')
+        self.scene.basic_bpm = float(tempo_el.attrib['value'])
+        for tempo_point_el in self.xml.findall('./Arrangement/TempoAutomation/RealPoint'):
+            self.scene.tempo_changes.append(TempoEvent(
+                float(tempo_point_el.attrib['value']),
+                tempo_point_el.attrib['interpolation'],
+                float(tempo_point_el.attrib['time'])
+            ))
+        last_time=0
+        last_tempo_change = None
+        ret = []
+        for tempo_change in self.scene.tempo_changes:
+            if tempo_change.time == 0.0:
+                tempo_change.time=0
+            elif last_tempo_change is None:
+                raise Exception('something is wrong with tempo data')
+            else:
+                timediff = last_tempo_change.time
+                if timediff==0.0:
+                    pass
+            last_tempo_change=tempo_change
+
 
     def read_tracks(self):
         for track_el in self.xml.findall('./Structure//Track'):
@@ -50,8 +76,8 @@ class DawProjectParser:
             color = track.color
         clip = Clip(
             name=clip_el.attrib['name'] if 'name' in clip_el.attrib else None,
-            time=clip_el.attrib['time'],
-            duration=clip_el.attrib['duration'],
+            time=float(clip_el.attrib['time']),
+            duration=float(clip_el.attrib['duration']),
             color=color)
         for note_el in clip_el.findall('./Notes/Note'):
             clip.notes.append(Note(
