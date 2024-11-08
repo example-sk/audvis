@@ -1,6 +1,7 @@
 from enum import Enum
-from typing import List, Union
-import numpy
+from math import floor, ceil
+from typing import List, Union, Tuple
+import bpy
 
 
 class Note:
@@ -24,10 +25,10 @@ class Clip:
     time: float
     duration: float
     name: str | None
-    color: tuple | None
+    color: Tuple[float, float, float, float] | None
     notes: List[Note]
 
-    def __init__(self, time: float, duration: float, name: str, color: tuple):
+    def __init__(self, time: float, duration: float, name: str, color: Tuple[float, float, float, float]):
         self.name = name
         self.color = color
         self.time = time
@@ -40,7 +41,7 @@ class Track:
     color: tuple
     clips: List[Clip]
 
-    def __init__(self, name: str, color: tuple):
+    def __init__(self, name: str, color: Tuple[float, float, float, float]):
         self.name = name
         self.color = color
         self.clips = []
@@ -87,32 +88,37 @@ class Scene:
                 max_time = max(max_time, clip.time + clip.duration)
         self.duration = max_time
 
-    def calc_tempo_to_time(self) -> List[tuple]:
-        """returns array of pairs (time, beats)
-        Beats can be used to calculate position"""
+    def calc_tempo_to_time(self) -> List[Tuple[float, float]]:
         if len(self.tempo_changes) == 0:
             return [(0, 0), (self.duration, self.duration / self.basic_bpm)]
-        res = []
-        last_timestamp = 0.0
-        last_tempo = 100
-        calculated_time_sum = 0.0
-        for tc in self.tempo_changes:
-            time_diff = tc.time - last_timestamp
-            avg_tempo = (last_tempo + tc.tempo) / 2
-            calculated_time = (60 / avg_tempo) * time_diff
-            calculated_time_sum += calculated_time
-            res.append((
-                calculated_time_sum,
-                tc.time,
-            ))
-            last_tempo = tc.tempo
-            last_timestamp = tc.time
-        if last_timestamp < self.duration:
-            res.append((
-                (60 / last_tempo) * (self.duration - last_timestamp),
-                self.duration,
-            ))
-        return res
+        action = bpy.data.actions.new('tmp')
+        fcurve = action.fcurves.new(data_path='tmp', index=-1)
+        fcurve.keyframe_points.add(len(self.tempo_changes))
+        for i in range(len(self.tempo_changes)):
+            point = fcurve.keyframe_points[i]
+            tc = self.tempo_changes[i]
+            point.co = (tc.time, tc.tempo)
+            point.handle_left_type = 'FREE'
+            point.handle_right_type = 'FREE'
+            point.handle_left = point.co  # TODO: support for bezier curves in tempo (.als files)
+            point.handle_right = point.co  # TODO: support for bezier curves in tempo (.als files)
+        x = 0.0
+        calculated_time = 0.0
+        step = .0001
+        x_max = fcurve.keyframe_points[-1].co[0]
+        x_max = max(x_max, self.duration)
+        last_value = fcurve.evaluate(x)
+        result = []
+        next_keyframe = -1
+        while x <= x_max:
+            if next_keyframe < calculated_time:
+                result.append((calculated_time, x))
+                next_keyframe = calculated_time + .1  # in seconds
+            x += step
+            current_value = fcurve.evaluate(x)
+            calculated_time += step * (60 / min(last_value, current_value))
+            last_value = current_value
+        return result
 
     def print(self):
         print('SCENE duration: {}'.format(self.duration))

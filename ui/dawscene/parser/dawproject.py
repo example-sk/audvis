@@ -1,7 +1,5 @@
 import zipfile
-import pathlib
 from xml.etree import ElementTree
-from pprint import pp
 
 from ..scene import (Scene, Track, Clip, Note, TempoEvent)
 
@@ -39,20 +37,6 @@ class DawProjectParser:
                 tempo_point_el.attrib['interpolation'],
                 float(tempo_point_el.attrib['time'])
             ))
-        last_time=0
-        last_tempo_change = None
-        ret = []
-        for tempo_change in self.scene.tempo_changes:
-            if tempo_change.time == 0.0:
-                tempo_change.time=0
-            elif last_tempo_change is None:
-                raise Exception('something is wrong with tempo data')
-            else:
-                timediff = last_tempo_change.time
-                if timediff==0.0:
-                    pass
-            last_tempo_change=tempo_change
-
 
     def read_tracks(self):
         for track_el in self.xml.findall('./Structure//Track'):
