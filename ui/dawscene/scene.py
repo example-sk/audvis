@@ -58,10 +58,12 @@ class TempoEvent:
     time: float | None
     time_seconds: float | None
 
-    def __init__(self, tempo: float, interpolation: InterpolationType, time: float | None = None):
+    def __init__(self, tempo: float, interpolation: InterpolationType, time: float | None = None,
+                 bezier_controls: Tuple[Tuple[float, float], Tuple[float, float]] | None=None):
         self.tempo = tempo
         self.interpolation = interpolation
         self.time = time
+        self.bezier_controls=bezier_controls
 
     def __repr__(self):
         return "\ntime: {}, tempo: {}, interpolation: {}".format(self.time, self.tempo, self.interpolation)

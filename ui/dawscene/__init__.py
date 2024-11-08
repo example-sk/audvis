@@ -3,7 +3,7 @@ import pathlib
 import bpy
 import bpy_extras
 
-from .parser import dawproject
+from .parser import (dawproject, als)
 from .scene import Scene
 from ..buttonspanel import AudVisButtonsPanel_Npanel
 
@@ -15,7 +15,7 @@ class AUDVIS_OT_DawSceneTo3D(bpy.types.Operator, bpy_extras.io_utils.ImportHelpe
     filepath: bpy.props.StringProperty(name=".dawscene file path", subtype='FILE_PATH', options={'SKIP_SAVE'})
     # filter_search: bpy.props.StringProperty(default="*.dawscene", options={'SKIP_SAVE'})
     filter_glob: bpy.props.StringProperty(
-        default="*.dawproject",
+        default="*.dawproject;*.als",
         options={'HIDDEN'},
     )
 
@@ -25,7 +25,7 @@ class AUDVIS_OT_DawSceneTo3D(bpy.types.Operator, bpy_extras.io_utils.ImportHelpe
 
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)
-        self.filter_search = '*.dawproject'
+        self.filter_search = '*.dawproject;*.als'
         return {'RUNNING_MODAL'}
 
     def _render(self, context, dawscene: Scene):
@@ -81,7 +81,7 @@ class AUDVIS_OT_DawSceneTo3D(bpy.types.Operator, bpy_extras.io_utils.ImportHelpe
             p2 = obj.animation_data.action.fcurves[0].keyframe_points[i]
             p1.handle_right = ((p1.co[0] + p2.co[0]) / 2, (p1.co[1] + p2.co[1]) / 2)
             p2.handle_left = ((p1.co[0] + p2.co[0]) / 2, (p1.co[1] + p2.co[1]) / 2)
-            print('p1 p2', [p1.co, p2.co])
+            # print('p1 p2', [p1.co, p2.co])
         bevel_modifier = obj.modifiers.new(name="Bevel", type="BEVEL")
         bevel_modifier.width = .025
         bevel_modifier.segments = 3
@@ -92,7 +92,6 @@ class AUDVIS_OT_DawSceneTo3D(bpy.types.Operator, bpy_extras.io_utils.ImportHelpe
         obj.select_set(True)
         context.view_layer.objects.active = obj
         context.view_layer.update()
-        print(context.view_layer.objects.active.name, obj.name)
 
     def _add_notes(self, clip, mesh, default_height, y):
         if len(clip.notes) == 0:
@@ -115,6 +114,8 @@ class AUDVIS_OT_DawSceneTo3D(bpy.types.Operator, bpy_extras.io_utils.ImportHelpe
         parsed_scene = None
         if self.filepath.endswith(".dawproject"):
             parsed_scene = dawproject.parse(self.filepath)
+        elif self.filepath.endswith(".als"):
+            parsed_scene = als.parse(self.filepath)
         # TODO: add other DAWs
         else:
             return {'CANCELLED'}

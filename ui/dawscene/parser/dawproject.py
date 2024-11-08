@@ -25,7 +25,6 @@ class DawProjectParser:
         self.read_tracks()
         self.read_lines()
         self.scene.calc_duration()
-        print(self.scene.calc_tempo_to_time())
         # self.scene.print()
 
     def read_tempo(self):
