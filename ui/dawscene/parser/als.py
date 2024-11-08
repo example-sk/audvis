@@ -81,17 +81,15 @@ class AbletonLiveSetParser:
             duration=end - start,
             color=color)
         track.clips.append(clip)
-        return
-        # TODO:
         for key_track in clip_el.findall('./Notes/KeyTracks/KeyTrack'):
-            key = key_track.find('MidiKey').attrib['Value']
-            for note_el in key_track.find('./Notes/MidiNoteEvent'):
+            key = int(key_track.find('./MidiKey').attrib['Value'])
+            for note_el in key_track.findall('./Notes/MidiNoteEvent'):
                 clip.notes.append(Note(
                     key=key,
                     duration=float(note_el.attrib['Duration']),
-                    velocity=float(note_el.attrib['Velocity']),
-                    rel=float(note_el.attrib['rel']),
-                    ch=int(note_el.attrib['channel']),
+                    velocity=float(note_el.attrib['Velocity']) / 127,
+                    rel=0,  # TODO float(note_el.attrib['rel']),
+                    ch=1,  # TODO int(note_el.attrib['channel']),
                     time=float(note_el.attrib['Time'])
                 ))
 
