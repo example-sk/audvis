@@ -90,7 +90,10 @@ class Scene:
 
     def calc_tempo_to_time(self) -> List[Tuple[float, float]]:
         if len(self.tempo_changes) == 0:
-            return [(0, 0), (self.duration, self.duration / self.basic_bpm)]
+            return [
+                (0, 0),
+                (self.duration * (60 / self.basic_bpm), self.duration)
+            ]
         action = bpy.data.actions.new('tmp')
         fcurve = action.fcurves.new(data_path='tmp', index=-1)
         fcurve.keyframe_points.add(len(self.tempo_changes))
