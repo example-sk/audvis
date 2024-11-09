@@ -62,16 +62,41 @@ class DawProjectParser:
             time=float(clip_el.attrib['time']),
             duration=float(clip_el.attrib['duration']),
             color=color)
-        for note_el in clip_el.findall('./Notes/Note'):
-            clip.notes.append(Note(
-                key=int(note_el.attrib['key']),
-                duration=float(note_el.attrib['duration']),
-                velocity=float(note_el.attrib['vel']),
-                rel=float(note_el.attrib['rel']),
-                ch=int(note_el.attrib['channel']),
-                time=float(note_el.attrib['time'])
-            ))
+        playStart = float(clip_el.attrib['playStart'])
+        self._add_notes_in_timerange(clip, clip_el.findall('./Notes/Note'),
+                                     time_start=playStart, time_end=playStart + clip.duration,
+                                     add_time=-playStart)
+        if "loopStart" in clip_el.attrib:
+            loop_start = float(clip_el.attrib['loopStart'])
+            loop_end = float(clip_el.attrib['loopEnd'])
+            loop_duration = loop_end - loop_start
+            time_cursor = playStart
+            while time_cursor < clip.duration:
+                if time_cursor + loop_duration > clip.duration:
+                    loop_end = clip.duration - time_cursor
+                self._add_notes_in_timerange(clip, clip_el.findall('./Notes/Note'),
+                                             time_start=loop_start, time_end=loop_end,
+                                             add_time=time_cursor - playStart)
+                time_cursor += loop_duration
         track.clips.append(clip)
+
+    def _add_notes_in_timerange(self, clip: Clip, note_elements,
+                                time_start: float, time_end: float,
+                                add_time: float = 0.0):
+        for note_el in note_elements:
+            note_time = float(note_el.attrib['time'])
+            note_duration = float(note_el.attrib['duration'])
+            if note_duration + note_time > time_end:
+                note_duration = time_end - note_time
+            if time_start <= note_time < time_end:
+                clip.notes.append(Note(
+                    key=int(note_el.attrib['key']),
+                    duration=float(note_duration),
+                    velocity=float(note_el.attrib['vel']),
+                    rel=float(note_el.attrib['rel']),
+                    ch=int(note_el.attrib['channel']),
+                    time=note_time + add_time
+                ))
 
 
 def _parse_color(input: str):
