@@ -128,7 +128,7 @@ class AUDVIS_OT_DawSceneTo3D(bpy.types.Operator, bpy_extras.io_utils.ImportHelpe
             vertex.co[0] = note.time + clip.time
             vertex.co[1] = -y - ((note.key - notes_range[0]) / notes_range_size) * default_height
             mesh.attributes['width'].data[index].value = note.duration
-            mesh.attributes['height'].data[index].value = default_height / 128
+            mesh.attributes['height'].data[index].value = default_height / notes_range_size
             mesh.attributes['layer'].data[index].value = 0
             mesh.attributes['clr'].data[index].color = clip.color
             index -= 1
