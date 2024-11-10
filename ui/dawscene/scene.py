@@ -173,11 +173,12 @@ class Scene:
         while x <= x_max:
             if next_keyframe < calculated_time:
                 result.append((calculated_time, x))
-                next_keyframe = calculated_time + .1  # in seconds
+                next_keyframe = calculated_time + .02  # in seconds
             x += step
             current_value = fcurve.evaluate(x)
             calculated_time += step * (60 / min(last_value, current_value))
             last_value = current_value
+        result.append((calculated_time, x))
         return result
 
     def print(self):
