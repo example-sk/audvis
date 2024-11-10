@@ -20,6 +20,7 @@ class Note:
         self.velocity = velocity
         self.rel = rel
 
+
 def _trim_notes(notes: List[Note], start: float, end: float, add: float = 0.0):
     res = []
     for note in notes:
@@ -81,7 +82,13 @@ class Clip:
             while time_cursor < self.duration:
                 new_list += _trim_notes(self.notes, loop_start, loop_end, time_cursor)
                 time_cursor += loop_end - loop_start
-        self.notes = new_list
+        new_new_list = []
+        for note in new_list:
+            if note.time < self.duration:
+                new_new_list.append(note)
+                if note.time + note.duration > self.duration:
+                    note.duration = self.duration - note.time
+        self.notes = new_new_list
 
 
 class Track:
