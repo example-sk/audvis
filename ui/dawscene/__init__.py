@@ -28,8 +28,25 @@ class AUDVIS_OT_DawSceneTo3D(bpy.types.Operator, bpy_extras.io_utils.ImportHelpe
         self.filter_search = '*.dawproject;*.als'
         return {'RUNNING_MODAL'}
 
+    def _render_track_name(self, track, collection, txt_parent, y):
+        font_curve = bpy.data.curves.new(type="FONT", name='track name ' + track.name)
+        font_curve.size = .5
+        txt_object = bpy.data.objects.new('track name ' + track.name, font_curve)
+        font_curve.align_y = 'TOP'
+        font_curve.align_x = 'RIGHT'
+        txt_object.data.body = track.name
+        collection.objects.link(txt_object)
+        txt_object.location[1] = -y
+        txt_object.parent = txt_parent
+
     def _render(self, context, dawscene: Scene):
         scene = context.scene
+        collection = bpy.data.collections.new('dawscene')
+        master_parent = bpy.data.objects.new('dawscene superparent', None)
+        txt_parent = bpy.data.objects.new('track labels parent', None)
+        txt_parent.parent = master_parent
+        collection.objects.link(txt_parent)
+        scene.collection.children.link(collection)
         if 'dawscene' not in bpy.data.node_groups:
             libpath = pathlib.Path(__file__).parent.resolve().__str__() + "/dawscene-blender3_6.blend"
             with bpy.data.libraries.load(libpath) as (data_from, data_to):
@@ -38,9 +55,12 @@ class AUDVIS_OT_DawSceneTo3D(bpy.types.Operator, bpy_extras.io_utils.ImportHelpe
             bpy.data.libraries.remove(bpy.data.libraries[-1])
         mesh = self._init_mesh(dawscene)
         y = 0.0
-        default_height = .2
+        default_height = .5
+        y_margin = .1
         for track in dawscene.tracks:
-            y = y + default_height
+            if len(track.clips) == 0:
+                continue
+            self._render_track_name(track, collection, txt_parent, y)
             for clip in track.clips:
                 mesh.vertices.add(1)
                 mesh.update()
@@ -49,13 +69,16 @@ class AUDVIS_OT_DawSceneTo3D(bpy.types.Operator, bpy_extras.io_utils.ImportHelpe
                 vertex.co[1] = -y
                 mesh.attributes['width'].data[-1].value = clip.duration
                 mesh.attributes['height'].data[-1].value = default_height
-                mesh.attributes['layer'].data[-1].value = 0
+                mesh.attributes['layer'].data[-1].value = -1
                 mesh.attributes['clr'].data[-1].color = clip.color
                 self._add_notes(clip, mesh, default_height, y)
+            y = y + default_height + y_margin
 
         obj = bpy.data.objects.new('dawscene', mesh)
+        obj.parent = master_parent
+        txt_parent.location[2]=.01
 
-        scene.collection.objects.link(obj)
+        collection.objects.link(obj)
         geonodes_modifier = obj.modifiers.new(name="dawscene", type="NODES")
         geonodes_modifier.node_group = bpy.data.node_groups['dawscene']
         keyframe_path = geonodes_modifier.path_from_id('["Input_5"]')
@@ -84,7 +107,7 @@ class AUDVIS_OT_DawSceneTo3D(bpy.types.Operator, bpy_extras.io_utils.ImportHelpe
             # print('p1 p2', [p1.co, p2.co])
         bevel_modifier = obj.modifiers.new(name="Bevel", type="BEVEL")
         bevel_modifier.width = .025
-        bevel_modifier.segments = 3
+        bevel_modifier.segments = 1
         obj.modifiers.active = geonodes_modifier
         context.view_layer.update()
         for o in context.view_layer.objects.selected:  # unselect all objects
@@ -96,15 +119,17 @@ class AUDVIS_OT_DawSceneTo3D(bpy.types.Operator, bpy_extras.io_utils.ImportHelpe
     def _add_notes(self, clip, mesh, default_height, y):
         if len(clip.notes) == 0:
             return
+        notes_range = clip.get_notes_range()
+        notes_range_size = notes_range[1] - notes_range[0] + 1
         mesh.vertices.add(len(clip.notes))
         index = -1
         for note in clip.notes:
             vertex = mesh.vertices[index]
             vertex.co[0] = note.time + clip.time
-            vertex.co[1] = -y + (note.key / 128) * default_height
+            vertex.co[1] = -y - ((note.key - notes_range[0]) / notes_range_size) * default_height
             mesh.attributes['width'].data[index].value = note.duration
             mesh.attributes['height'].data[index].value = default_height / 128
-            mesh.attributes['layer'].data[index].value = 1
+            mesh.attributes['layer'].data[index].value = 0
             mesh.attributes['clr'].data[index].color = clip.color
             index -= 1
 
