@@ -92,6 +92,13 @@ class AbletonLiveSetParser:
                     ch=1,  # TODO int(note_el.attrib['channel']),
                     time=float(note_el.attrib['Time'])
                 ))
+        start_relative = float(clip_el.find('./Loop/StartRelative').attrib['Value'])
+        loop_start = float(clip_el.find('./Loop/LoopStart').attrib['Value'])
+        loop_end = float(clip_el.find('./Loop/LoopEnd').attrib['Value'])
+        if clip_el.find('./Loop/LoopOn').attrib['Value'] == 'true':
+            clip.consolidate_notes(start_relative, True, loop_start, loop_end)
+        else:
+            clip.consolidate_notes(start_relative, False)
 
 
 def _parse_color(id: str):
