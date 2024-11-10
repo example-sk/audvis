@@ -2,6 +2,7 @@ from enum import Enum
 from math import floor, ceil
 from typing import List, Union, Tuple
 import bpy
+import copy
 
 
 class Note:
@@ -19,6 +20,17 @@ class Note:
         self.velocity = velocity
         self.rel = rel
 
+def _trim_notes(notes: List[Note], start: float, end: float, add: float = 0.0):
+    res = []
+    for note in notes:
+        if start <= note.time < end:
+            note = copy.copy(note)
+            if note.time + note.duration > end:
+                note.duration = end - note.time
+            note.time = note.time - start + add
+            res.append(note)
+    return res
+
 
 class Clip:
     # sound: ? TODO
@@ -34,6 +46,42 @@ class Clip:
         self.time = time
         self.duration = duration
         self.notes = []
+
+    def get_notes_range(self) -> None | Tuple[float, float]:
+        res: List | None = None
+        for note in self.notes:
+            if res is None:
+                res = [note.key, note.key]
+            else:
+                if note.key < res[0]:
+                    res[0] = note.key
+                if note.key > res[1]:
+                    res[1] = note.key
+        if res is None:
+            return (0.0, 0.0)
+        return res[0], res[1]
+
+    def consolidate_notes(self,
+                          play_start: float = 0.0,
+                          loop: bool = False,
+                          loop_start: float | None = None,
+                          loop_end: float | None = None):
+        new_list: List[Note] = []
+        start = 0.0
+        if play_start != 0.0:
+            start = play_start
+        elif loop_start is not None:
+            start = loop_start
+        end = self.duration
+        if loop:
+            end = loop_end
+        new_list += _trim_notes(self.notes, start, end)
+        if loop:
+            time_cursor: float = end - start
+            while time_cursor < self.duration:
+                new_list += _trim_notes(self.notes, loop_start, loop_end, time_cursor)
+                time_cursor += loop_end - loop_start
+        self.notes = new_list
 
 
 class Track:
@@ -59,11 +107,11 @@ class TempoEvent:
     time_seconds: float | None
 
     def __init__(self, tempo: float, interpolation: InterpolationType, time: float | None = None,
-                 bezier_controls: Tuple[Tuple[float, float], Tuple[float, float]] | None=None):
+                 bezier_controls: Tuple[Tuple[float, float], Tuple[float, float]] | None = None):
         self.tempo = tempo
         self.interpolation = interpolation
         self.time = time
-        self.bezier_controls=bezier_controls
+        self.bezier_controls = bezier_controls
 
     def __repr__(self):
         return "\ntime: {}, tempo: {}, interpolation: {}".format(self.time, self.tempo, self.interpolation)
