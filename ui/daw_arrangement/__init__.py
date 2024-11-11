@@ -4,16 +4,16 @@ import bpy
 import bpy_extras
 
 from .parser import (dawproject, als)
-from .scene import Scene
+from .arrangement import Arrangement
 from ..buttonspanel import AudVisButtonsPanel_Npanel
 
 
-class AUDVIS_OT_DawSceneTo3D(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
-    bl_idname = "audvis.dawsceneto3d"
-    bl_label = "Import DAW Scene"
+class AUDVIS_OT_DawArrangementTo3D(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
+    bl_idname = "audvis.dawarrangementto3d"
+    bl_label = "Import DAW Arrangement"
 
-    filepath: bpy.props.StringProperty(name=".dawscene file path", subtype='FILE_PATH', options={'SKIP_SAVE'})
-    # filter_search: bpy.props.StringProperty(default="*.dawscene", options={'SKIP_SAVE'})
+    filepath: bpy.props.StringProperty(name=".dawarrangement file path", subtype='FILE_PATH', options={'SKIP_SAVE'})
+    # filter_search: bpy.props.StringProperty(default="*.dawarrangement", options={'SKIP_SAVE'})
     filter_glob: bpy.props.StringProperty(
         default="*.dawproject;*.als",
         options={'HIDDEN'},
@@ -41,10 +41,10 @@ class AUDVIS_OT_DawSceneTo3D(bpy.types.Operator, bpy_extras.io_utils.ImportHelpe
         if track.color is not None:
             txt_object.color = track.color
 
-    def _render(self, context, dawscene: Scene):
+    def _render(self, context, dawarrangement: Arrangement):
         scene = context.scene
-        collection = bpy.data.collections.new('dawscene')
-        master_parent = bpy.data.objects.new('dawscene superparent', None)
+        collection = bpy.data.collections.new('dawarrangement')
+        master_parent = bpy.data.objects.new('dawarrangement superparent', None)
         txt_curve = bpy.data.curves.new(type="FONT", name='track names')
         txt_curve.size = .5
         txt_curve.space_line = 1.2
@@ -54,17 +54,17 @@ class AUDVIS_OT_DawSceneTo3D(bpy.types.Operator, bpy_extras.io_utils.ImportHelpe
         # txt_obj.parent = master_parent
         # collection.objects.link(txt_obj)
         scene.collection.children.link(collection)
-        if 'dawscene' not in bpy.data.node_groups:
-            libpath = pathlib.Path(__file__).parent.resolve().__str__() + "/dawscene-blender3_6.blend"
+        if 'DawArrangement' not in bpy.data.node_groups:
+            libpath = pathlib.Path(__file__).parent.resolve().__str__() + "/DawArrangement-blender3_6.blend"
             with bpy.data.libraries.load(libpath) as (data_from, data_to):
                 data_to.materials = data_from.materials
                 data_to.node_groups = data_from.node_groups
             bpy.data.libraries.remove(bpy.data.libraries[-1])
-        mesh = self._init_mesh(dawscene)
+        mesh = self._init_mesh(dawarrangement)
         y = 0.0
         default_height = .5
         y_margin = .1
-        for track in dawscene.tracks:
+        for track in dawarrangement.tracks:
             if len(track.clips) == 0:
                 continue
             txt_curve.body = txt_curve.body + track.name + "\n"
@@ -82,20 +82,20 @@ class AUDVIS_OT_DawSceneTo3D(bpy.types.Operator, bpy_extras.io_utils.ImportHelpe
                 self._add_notes(clip, mesh, default_height, y)
             y = y + default_height + y_margin
 
-        obj = bpy.data.objects.new('dawscene', mesh)
+        obj = bpy.data.objects.new('dawarrangement', mesh)
         obj.parent = master_parent
         txt_obj.location[2] = .01
 
         collection.objects.link(obj)
-        geonodes_modifier = obj.modifiers.new(name="dawscene", type="NODES")
-        geonodes_modifier.node_group = bpy.data.node_groups['dawscene']
+        geonodes_modifier = obj.modifiers.new(name="DawArrangement", type="NODES")
+        geonodes_modifier.node_group = bpy.data.node_groups['DawArrangement']
         keyframe_path = geonodes_modifier.path_from_id('["Input_5"]')
         obj.animation_data_create()
         if obj.animation_data.action is None:
             obj.animation_data.action = bpy.data.actions.new('NewAction')
         fcurve = obj.animation_data.action.fcurves.new(data_path=keyframe_path)
         geonodes_modifier['Input_5'] = 0
-        time_points = dawscene.calc_tempo_to_time()
+        time_points = dawarrangement.calc_tempo_to_time()
         fcurve.keyframe_points.add(len(time_points))
         for time_point in time_points:
             geonodes_modifier['Input_5'] = time_point[1]
@@ -144,19 +144,19 @@ class AUDVIS_OT_DawSceneTo3D(bpy.types.Operator, bpy_extras.io_utils.ImportHelpe
     def execute(self, context):
         if not self.filepath:
             return {'CANCELLED'}
-        parsed_scene = None
+        parsed_arrangement = None
         if self.filepath.endswith(".dawproject"):
-            parsed_scene = dawproject.parse(self.filepath)
+            parsed_arrangement = dawproject.parse(self.filepath)
         elif self.filepath.endswith(".als"):
-            parsed_scene = als.parse(self.filepath)
+            parsed_arrangement = als.parse(self.filepath)
         # TODO: add other DAWs
         else:
             return {'CANCELLED'}
-        self._render(context, parsed_scene)
+        self._render(context, parsed_arrangement)
         return {'FINISHED'}
 
-    def _init_mesh(self, dawscene: Scene):
-        mesh = bpy.data.meshes.new(dawscene.name if dawscene.name is not None else 'dawscene')
+    def _init_mesh(self, dawarrangement: Arrangement):
+        mesh = bpy.data.meshes.new(dawarrangement.name if dawarrangement.name is not None else 'dawarrangement')
         mesh.attributes.new('width', 'FLOAT', 'POINT')
         mesh.attributes.new('height', 'FLOAT', 'POINT')
         mesh.attributes.new('layer', 'INT', 'POINT')
@@ -175,7 +175,7 @@ def _parse_color(input: str):
 
 
 class AUDVIS_PT_DawprojectTo3d(AudVisButtonsPanel_Npanel):
-    bl_label = "Import DAW arrangement"
+    bl_label = "Import DAW Arrangement"
 
     @classmethod
     def poll(cls, context):
@@ -185,10 +185,10 @@ class AUDVIS_PT_DawprojectTo3d(AudVisButtonsPanel_Npanel):
         layout = self.layout
         scene = context.scene
         col = layout.column(align=True)
-        col.operator('audvis.dawsceneto3d')
+        col.operator('audvis.dawarrangementto3d')
 
 
 classes = [
-    AUDVIS_OT_DawSceneTo3D,
+    AUDVIS_OT_DawArrangementTo3D,
     AUDVIS_PT_DawprojectTo3d,
 ]

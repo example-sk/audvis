@@ -124,7 +124,7 @@ class TempoEvent:
         return "\ntime: {}, tempo: {}, interpolation: {}".format(self.time, self.tempo, self.interpolation)
 
 
-class Scene:
+class Arrangement:
     name: str | None
     tracks: List[Track]
     basic_bpm: float
@@ -182,7 +182,7 @@ class Scene:
         return result
 
     def print(self):
-        print('SCENE duration: {}'.format(self.duration))
+        print('ARRANGEMENT duration: {}'.format(self.duration))
         for t in self.tracks:
             print(' TRACK: {}'.format(t.name))
             for clip in t.clips:

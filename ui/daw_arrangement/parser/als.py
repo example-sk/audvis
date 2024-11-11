@@ -2,43 +2,43 @@ import gzip
 from xml.etree import ElementTree
 
 from .ableton_color_map import ableton_color_map
-from ..scene import (Scene, Track, Clip, Note, TempoEvent)
+from ..arrangement import (Arrangement, Track, Clip, Note, TempoEvent)
 
 
-def parse(filepath) -> Scene:
+def parse(filepath) -> Arrangement:
     zip = gzip.open(filename=filepath, mode='r')
     xml = ElementTree.parse(zip)
-    scene = AbletonLiveSetParser(xml).scene
-    return scene
+    arrangement = AbletonLiveSetParser(xml).arrangement
+    return arrangement
 
 
 class AbletonLiveSetParser:
     xml: ElementTree
-    scene: Scene
+    arrangement: Arrangement
     track_by_id: dict
     line_height = .3
 
     def __init__(self, xml):
         self.track_by_id = {}
         self.xml = xml
-        self.scene = Scene()
+        self.arrangement = Arrangement()
         self.all_tracks = {}
         self.read_tempo()
         self.read_tracks()
-        self.scene.calc_duration()
-        self.scene.print()
+        self.arrangement.calc_duration()
+        self.arrangement.print()
 
     def read_tempo(self):
         tempo_el = self.xml.find('./LiveSet/MasterTrack/DeviceChain/Mixer/Tempo/Manual')
         automation_target = self.xml.find('./LiveSet/MasterTrack/DeviceChain/Mixer/Tempo/AutomationTarget').attrib['Id']
-        self.scene.basic_bpm = float(tempo_el.attrib['Value'])
+        self.arrangement.basic_bpm = float(tempo_el.attrib['Value'])
         for tempo_point_el in self.xml.findall(
                 './LiveSet/MasterTrack/AutomationEnvelopes'
                 '/Envelopes/AutomationEnvelope/EnvelopeTarget/PointeeId[@Value="{}"]'
                 '/../../'
                 '/Automation/Events/FloatEvent'.format(
                     automation_target)):
-            self.scene.tempo_changes.append(TempoEvent(
+            self.arrangement.tempo_changes.append(TempoEvent(
                 float(tempo_point_el.attrib['Value']),
                 'bezier' if "CurveControl1Y" in tempo_point_el.attrib else 'linear',
                 float(tempo_point_el.attrib['Time']),
@@ -62,7 +62,7 @@ class AbletonLiveSetParser:
                 name = name2
             track = Track(name=name, color=color)
             self.track_by_id[track_el.attrib['Id']] = track
-            self.scene.tracks.append(track)
+            self.arrangement.tracks.append(track)
             self.parse_clips(track, track_el)
 
     def parse_clips(self, track, track_el: ElementTree):

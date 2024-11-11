@@ -1,37 +1,37 @@
 import zipfile
 from xml.etree import ElementTree
 
-from ..scene import (Scene, Track, Clip, Note, TempoEvent)
+from ..arrangement import (Arrangement, Track, Clip, Note, TempoEvent)
 
 
-def parse(filepath) -> Scene:
+def parse(filepath) -> Arrangement:
     zip = zipfile.ZipFile(file=filepath, mode='r')
     xml = ElementTree.parse(zip.open('project.xml'))
-    return DawProjectParser(xml).scene
+    return DawProjectParser(xml).arrangement
 
 
 class DawProjectParser:
     xml: ElementTree
-    scene: Scene
+    arrangement: Arrangement
     track_by_id: dict
     line_height = .3
 
     def __init__(self, xml):
         self.track_by_id = {}
         self.xml = xml
-        self.scene = Scene()
+        self.arrangement = Arrangement()
         self.all_tracks = {}
         self.read_tempo()
         self.read_tracks()
         self.read_lines()
-        self.scene.calc_duration()
-        # self.scene.print()
+        self.arrangement.calc_duration()
+        # self.arrangement.print()
 
     def read_tempo(self):
         tempo_el = self.xml.find('./Transport/Tempo')
-        self.scene.basic_bpm = float(tempo_el.attrib['value'])
+        self.arrangement.basic_bpm = float(tempo_el.attrib['value'])
         for tempo_point_el in self.xml.findall('./Arrangement/TempoAutomation/RealPoint'):
-            self.scene.tempo_changes.append(TempoEvent(
+            self.arrangement.tempo_changes.append(TempoEvent(
                 float(tempo_point_el.attrib['value']),
                 tempo_point_el.attrib['interpolation'],
                 float(tempo_point_el.attrib['time'])
@@ -42,7 +42,7 @@ class DawProjectParser:
             color = _parse_color(track_el.attrib['color']) if 'color' in track_el.attrib else None
             track = Track(name=track_el.attrib['name'], color=color)
             self.track_by_id[track_el.attrib['id']] = track
-            self.scene.tracks.append(track)
+            self.arrangement.tracks.append(track)
 
     def read_lines(self):
         lanes = self.xml.findall('./Arrangement/Lanes/Lanes')
