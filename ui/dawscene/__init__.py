@@ -38,14 +38,21 @@ class AUDVIS_OT_DawSceneTo3D(bpy.types.Operator, bpy_extras.io_utils.ImportHelpe
         collection.objects.link(txt_object)
         txt_object.location[1] = -y
         txt_object.parent = txt_parent
+        if track.color is not None:
+            txt_object.color = track.color
 
     def _render(self, context, dawscene: Scene):
         scene = context.scene
         collection = bpy.data.collections.new('dawscene')
         master_parent = bpy.data.objects.new('dawscene superparent', None)
-        txt_parent = bpy.data.objects.new('track labels parent', None)
-        txt_parent.parent = master_parent
-        collection.objects.link(txt_parent)
+        txt_curve = bpy.data.curves.new(type="FONT", name='track names')
+        txt_curve.size = .5
+        txt_curve.space_line = 1.2
+        txt_curve.align_y = 'TOP'
+        txt_curve.align_x = 'RIGHT'
+        txt_obj = bpy.data.objects.new('track labels parent', txt_curve)
+        # txt_obj.parent = master_parent
+        # collection.objects.link(txt_obj)
         scene.collection.children.link(collection)
         if 'dawscene' not in bpy.data.node_groups:
             libpath = pathlib.Path(__file__).parent.resolve().__str__() + "/dawscene-blender3_6.blend"
@@ -60,7 +67,8 @@ class AUDVIS_OT_DawSceneTo3D(bpy.types.Operator, bpy_extras.io_utils.ImportHelpe
         for track in dawscene.tracks:
             if len(track.clips) == 0:
                 continue
-            self._render_track_name(track, collection, txt_parent, y)
+            txt_curve.body = txt_curve.body + track.name + "\n"
+            self._render_track_name(track, collection, txt_obj, y)
             for clip in track.clips:
                 mesh.vertices.add(1)
                 mesh.update()
@@ -76,7 +84,7 @@ class AUDVIS_OT_DawSceneTo3D(bpy.types.Operator, bpy_extras.io_utils.ImportHelpe
 
         obj = bpy.data.objects.new('dawscene', mesh)
         obj.parent = master_parent
-        txt_parent.location[2]=.01
+        txt_obj.location[2] = .01
 
         collection.objects.link(obj)
         geonodes_modifier = obj.modifiers.new(name="dawscene", type="NODES")
@@ -105,9 +113,9 @@ class AUDVIS_OT_DawSceneTo3D(bpy.types.Operator, bpy_extras.io_utils.ImportHelpe
             p1.handle_right = ((p1.co[0] + p2.co[0]) / 2, (p1.co[1] + p2.co[1]) / 2)
             p2.handle_left = ((p1.co[0] + p2.co[0]) / 2, (p1.co[1] + p2.co[1]) / 2)
             # print('p1 p2', [p1.co, p2.co])
-        bevel_modifier = obj.modifiers.new(name="Bevel", type="BEVEL")
-        bevel_modifier.width = .025
-        bevel_modifier.segments = 1
+        # bevel_modifier = obj.modifiers.new(name="Bevel", type="BEVEL")
+        # bevel_modifier.width = .025
+        # bevel_modifier.segments = 1
         obj.modifiers.active = geonodes_modifier
         context.view_layer.update()
         for o in context.view_layer.objects.selected:  # unselect all objects
