@@ -7,6 +7,7 @@ from . import (
     party,
     midi,
     spreaddrivers,
+    daw_arrangement,
 )
 from .. import (
     values,
@@ -37,6 +38,9 @@ class AudvisSceneProperties(bpy.types.PropertyGroup):
 
     midi_realtime: bpy.props.PointerProperty(type=midi.AudvisMidiProperties)
     midi_file: bpy.props.PointerProperty(type=midi.AudvisMidiFilesProperties)
+
+    # daw arrangement
+    daw_arrangement: bpy.props.PointerProperty(type=daw_arrangement.AudvisDawArrangement)
 
     # channels
     channels: bpy.props.IntProperty(name="Channels Count", default=1, min=1, soft_max=32,
@@ -296,4 +300,4 @@ class AudvisSceneProperties(bpy.types.PropertyGroup):
     ])
     example_sound_sequence: bpy.props.StringProperty(name="Sequence", default="")
     example_sequence_channel: bpy.props.IntProperty(name="Sequence Channel", default=0, min=0,
-                                            description="Channel number in Video Sequence Editor")
+                                                    description="Channel number in Video Sequence Editor")

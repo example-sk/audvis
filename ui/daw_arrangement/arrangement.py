@@ -1,8 +1,8 @@
-from enum import Enum
-from math import floor, ceil
-from typing import List, Union, Tuple
-import bpy
 import copy
+from enum import Enum
+from typing import List, Tuple
+
+import bpy
 
 
 class Note:
@@ -89,6 +89,23 @@ class Clip:
                 if note.time + note.duration > self.duration:
                     note.duration = self.duration - note.time
         self.notes = new_new_list
+
+    def parse_soundwave(self, helper_action: bpy.types.Action, filename: str, warp_points: List[Tuple[float, float]]):
+        """
+        TODO: make fake fcurve where warp.attrib['time'] is on X axis and warp.attrib['contentTime']
+        Then make another fcurve with audio data
+        :param filename:
+        :return:
+        """
+        import aud
+        s = aud.Sound(filename)
+        s = s.rechannel(1)  # We don't need 2 channels (at least for now)
+        s = s.resample(1000)  # Data points per second. We don't need huge data amounts just for soundwave
+        time_map_fcurve = helper_action.fcurves.new(data_path="soundclip_time_mapping_{}".format(self.id))
+        time_map_fcurve.keyframe_points.add(len(warp_points))
+        for i in range(len(warp_points)):
+            time_map_fcurve.keyframe_points[i].co = warp_points[i]
+            time_map_fcurve.keyframe_points[i].interpolation = 'LINEAR'
 
 
 class Track:
