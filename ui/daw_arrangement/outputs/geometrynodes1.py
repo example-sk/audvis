@@ -133,7 +133,7 @@ class GeometryNodes1:
             vertex = mesh.vertices[index]
             vertex.co = [
                 (note.time + clip.time) * self.props.zoom,
-                -y - (padding / 2) - ((note.key - notes_range[0]) / notes_range_size) * notes_line_height,
+                -y - (padding / 2) - ((notes_range[1] - note.key) / notes_range_size) * notes_line_height,
                 self.props.thickness_clip
             ]
             mesh.attributes['width'].data[index].value = note.duration * self.props.zoom
