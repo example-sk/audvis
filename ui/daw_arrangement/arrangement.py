@@ -1,8 +1,67 @@
 import copy
 from enum import Enum
-from typing import List, Tuple
+from typing import List, Tuple, Dict
+import aud
+import numpy as np
 
 import bpy
+
+
+def _get_tmp_fcurve(data_path="tmp"):
+    if "AudvisDawHelper" not in bpy.data.actions:
+        action = bpy.data.actions.new("AudvisDawHelper")
+    else:
+        action = bpy.data.actions["AudvisDawHelper"]
+    for fcurve in action.fcurves:
+        if fcurve.data_path == data_path:
+            fcurve.keyframe_points.clear()
+            return fcurve
+    return action.fcurves.new(data_path)
+
+
+class Audio:
+    raw_data: List
+    warps: List[Tuple[float, float]]
+    loop_start: float
+    loop_end: float
+    time: float
+    duration: float
+    play_start: float
+
+    def __init__(self, raw_data, warps: List[Tuple[float, float]],
+                 loop_start: float, loop_end: float,
+                 time: float, duration: float, play_start: float):
+        self.raw_data = raw_data
+        self.warps = warps
+        self.loop_start = loop_start
+        self.loop_end = loop_end
+        self.time = time
+        self.duration = duration
+        self.play_start = play_start
+
+    def to_points(self, interval: float, clip) -> List[Tuple[float, float]]:
+        loop_duration = self.loop_end - self.loop_start
+        result = []
+        time_map_fcurve = _get_tmp_fcurve()
+        time_map_fcurve.keyframe_points.add(len(self.warps))
+        for i in range(len(self.warps)):
+            time_map_fcurve.keyframe_points[i].interpolation = 'LINEAR'
+            time_map_fcurve.keyframe_points[i].co = self.warps[i]
+        fcurve_x_cursor: float = self.play_start
+        beats_x_cursor: float = 0.0
+        duration = min(self.duration, clip.duration)
+        while beats_x_cursor < duration:
+            seconds_of_sound: float = time_map_fcurve.evaluate(fcurve_x_cursor)
+            index = int(seconds_of_sound * SAMPLERATE)
+            if index >= len(self.raw_data):
+                index = len(self.raw_data) - 1
+            y_value = self.raw_data[index]
+            result.append((beats_x_cursor, y_value))
+            beats_x_cursor += interval
+            fcurve_x_cursor += interval
+            if fcurve_x_cursor > self.loop_end:
+                fcurve_x_cursor -= loop_duration
+        return result
 
 
 class Note:
@@ -34,12 +93,12 @@ def _trim_notes(notes: List[Note], start: float, end: float, add: float = 0.0):
 
 
 class Clip:
-    # sound: ? TODO
     time: float
     duration: float
     name: str | None
     color: Tuple[float, float, float, float] | None
     notes: List[Note]
+    audio: List[Audio]
 
     def __init__(self, time: float, duration: float, name: str, color: Tuple[float, float, float, float]):
         self.name = name
@@ -47,6 +106,7 @@ class Clip:
         self.time = time
         self.duration = duration
         self.notes = []
+        self.audio = []
 
     def get_notes_range(self) -> None | Tuple[float, float]:
         res: List | None = None
@@ -90,23 +150,6 @@ class Clip:
                     note.duration = self.duration - note.time
         self.notes = new_new_list
 
-    def parse_soundwave(self, helper_action: bpy.types.Action, filename: str, warp_points: List[Tuple[float, float]]):
-        """
-        TODO: make fake fcurve where warp.attrib['time'] is on X axis and warp.attrib['contentTime']
-        Then make another fcurve with audio data
-        :param filename:
-        :return:
-        """
-        import aud
-        s = aud.Sound(filename)
-        s = s.rechannel(1)  # We don't need 2 channels (at least for now)
-        s = s.resample(1000)  # Data points per second. We don't need huge data amounts just for soundwave
-        time_map_fcurve = helper_action.fcurves.new(data_path="soundclip_time_mapping_{}".format(self.id))
-        time_map_fcurve.keyframe_points.add(len(warp_points))
-        for i in range(len(warp_points)):
-            time_map_fcurve.keyframe_points[i].co = warp_points[i]
-            time_map_fcurve.keyframe_points[i].interpolation = 'LINEAR'
-
 
 class Track:
     name: str
@@ -141,12 +184,16 @@ class TempoEvent:
         return "\ntime: {}, tempo: {}, interpolation: {}".format(self.time, self.tempo, self.interpolation)
 
 
+SAMPLERATE = 1000
+
+
 class Arrangement:
     name: str | None
     tracks: List[Track]
     basic_bpm: float
     tempo_changes: List[TempoEvent]
     duration: float
+    audio_map: Dict[str, object]
 
     def __init__(self, name: str | None = None):
         self.name = name
@@ -154,6 +201,16 @@ class Arrangement:
         self.bpm = 110
         self.tempo_changes = []
         self.duration: 0.0
+        self.audio_map = {}
+
+    def load_audio(self, filepath: str, identifier: str):
+        sound = aud.Sound(filepath)
+        sound = sound.rechannel(1)
+        sound = sound.resample(SAMPLERATE)
+        data = sound.data()
+        data = np.reshape(data, len(data))
+        data = abs(data)
+        self.audio_map[identifier] = data
 
     def calc_duration(self):
         max_time = 0.0

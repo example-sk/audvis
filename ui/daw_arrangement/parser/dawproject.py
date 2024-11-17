@@ -1,31 +1,46 @@
 import zipfile
+import tempfile
+from xml.etree.ElementTree import Element
+
+import bpy
 from xml.etree import ElementTree
 
-from ..arrangement import (Arrangement, Track, Clip, Note, TempoEvent)
+from ..arrangement import (Arrangement, Track, Clip, Note, TempoEvent, Audio)
 
 
 def parse(filepath) -> Arrangement:
-    zip = zipfile.ZipFile(file=filepath, mode='r')
-    xml = ElementTree.parse(zip.open('project.xml'))
-    return DawProjectParser(xml).arrangement
+    return DawProjectParser(filepath).arrangement
 
 
 class DawProjectParser:
     xml: ElementTree
     arrangement: Arrangement
     track_by_id: dict
-    line_height = .3
+    tempdir: tempfile.TemporaryDirectory
 
-    def __init__(self, xml):
+    def __init__(self, filepath):
+        self.arrangement = Arrangement()
+        self.tempdir = tempfile.TemporaryDirectory(prefix="daw_audio_", dir=bpy.app.tempdir)
+        with zipfile.ZipFile(file=filepath, mode='r') as archive:
+            xml = ElementTree.parse(archive.open('project.xml'))
+            self.unzip_audio(archive)
+        bpy.asdfasdf = self.arrangement.audio_map
         self.track_by_id = {}
         self.xml = xml
-        self.arrangement = Arrangement()
         self.all_tracks = {}
         self.read_tempo()
         self.read_tracks()
         self.read_lines()
         self.arrangement.calc_duration()
         # self.arrangement.print()
+
+    def unzip_audio(self, archive: zipfile.ZipFile):
+        for name in archive.namelist():
+            if name.startswith("audio/"):
+                short_name = name[6:]
+                if "/" not in short_name:
+                    new_path = archive.extract(name, self.tempdir.name)
+                    self.arrangement.load_audio(new_path, name)
 
     def read_tempo(self):
         tempo_el = self.xml.find('./Transport/Tempo')
@@ -51,7 +66,7 @@ class DawProjectParser:
             for clip_el in lane.findall('./Clips/Clip'):
                 self.parse_clip(track, clip_el)
 
-    def parse_clip(self, track: Track, clip_el):
+    def parse_clip(self, track: Track, clip_el: Element):
         color = (.1, .5, .1, 1)
         if "color" in clip_el.attrib:
             color = _parse_color(clip_el.attrib['color'])
@@ -78,7 +93,37 @@ class DawProjectParser:
             clip.consolidate_notes(play_start, True, loop_start, loop_end)
         else:
             clip.consolidate_notes(play_start, False)
+        self.parse_clip_audio(clip_el, clip)
         track.clips.append(clip)
+
+    def parse_clip_audio(self, clip_el: Element, clip: Clip):
+        """
+        subclip: <Clip time="0.0" duration="113.73291015625" contentTimeUnit="beats" playStart="0.0" fadeTimeUnit="beats" fadeInTime="0.0" fadeOutTime="0.0">
+        warp: <Warp time="191.28378868103027" contentTime="71.081056023"/>
+        """
+        for subclip_el in clip_el.findall('./Clips/Clip'):
+            if subclip_el is None:
+                return
+            warps_el = subclip_el.find('.//Warps')
+            if warps_el is None:
+                return
+            path = warps_el.find('./Audio/File').attrib['path']
+            warps = []
+            for warp_el in warps_el.findall('./Warp'):
+                warps.append((
+                    float(warp_el.attrib['time']),
+                    float(warp_el.attrib['contentTime']),
+                ))
+            raw_data = self.arrangement.audio_map[path]
+            clip.audio.append(Audio(
+                raw_data=raw_data,
+                warps=warps,
+                loop_start=float(clip_el.attrib['loopStart'] if "loopStart" in clip_el.attrib else 0.0),
+                loop_end=float(clip_el.attrib['loopEnd'] if "loopEnd" in clip_el.attrib else clip_el.attrib['duration']),
+                time=float(subclip_el.attrib['time']),
+                duration=float(subclip_el.attrib['duration']),
+                play_start=float(subclip_el.attrib['playStart']) + float(clip_el.attrib['playStart'])
+            ))
 
 
 def _parse_color(input: str):

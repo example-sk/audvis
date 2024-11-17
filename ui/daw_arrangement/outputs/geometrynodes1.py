@@ -1,7 +1,7 @@
 import bpy
-import pathlib
+import math
 
-from ..arrangement import Arrangement
+from ..arrangement import Arrangement, Clip
 from ...props.daw_arrangement import AudvisDawArrangement
 
 
@@ -32,6 +32,7 @@ class GeometryNodes1:
         scene.collection.children.link(collection)
         mesh = self.init_mesh(dawarrangement)
         notes_mesh = self.init_mesh(dawarrangement)
+        audio_mesh = self.init_mesh(dawarrangement)
         y = 0.0
         default_height = props.line_height
         y_margin = props.line_margin
@@ -53,15 +54,15 @@ class GeometryNodes1:
                 mesh.attributes['height'].data[-1].value = props.line_height
                 mesh.attributes['clr'].data[-1].color = clip.color
                 self.add_notes(clip, notes_mesh, y)
-                # clip.parse_soundwave(bpy_arrangement.helper_action, "/home/r/Music/kodiki/4009433672.mp3",
-                #                     [(0, 0), (168.6564235687256, 11.89120014912915),
-                #                      (299.2837886810303, 112.24828873200025), (341.9036741256714, 128.156735)])
+                self.add_audio(clip, audio_mesh, y)
             y = y + default_height + y_margin
 
         clips_obj = bpy.data.objects.new('daw arrangement clips', mesh)
         clips_obj.parent = self.master_parent
         notes_obj = bpy.data.objects.new('daw arrangement notes', notes_mesh)
         notes_obj.parent = self.master_parent
+        audio_obj = bpy.data.objects.new('daw arrangement soundwaves', audio_mesh)
+        audio_obj.parent = self.master_parent
         if props.track_name_position == "0":
             pass
         elif props.track_name_position == "1":
@@ -71,22 +72,27 @@ class GeometryNodes1:
 
         collection.objects.link(clips_obj)
         collection.objects.link(notes_obj)
-        self.add_geonodes_and_animate(clips_obj, self.props.thickness_clip)
-        self.add_geonodes_and_animate(notes_obj, self.props.thickness_note)
+        collection.objects.link(audio_obj)
+        self.add_geonodes(clips_obj, self.props.thickness_clip)
+        self.add_geonodes(notes_obj, self.props.thickness_note)
+        self.animate(clips_obj)
+        self.animate(notes_obj)
+        self.animate(audio_obj)
         self.select(context, clips_obj)
 
-    def add_geonodes_and_animate(self, obj, thickness: float):
-        props = self.props
-        scene = self.scene
-        arrangement = self.arrangement
+    def add_geonodes(self, obj, thickness: float):
         geonodes_modifier = obj.modifiers.new(name="DawArrangement", type="NODES")
         geonodes_modifier.node_group = bpy.data.node_groups['DawArrangement']
         geonodes_modifier['Input_2'] = thickness
+
+    def animate(self, obj):
+        props = self.props
+        scene = self.scene
+        arrangement = self.arrangement
         obj.animation_data_create()
         if obj.animation_data.action is None:
             obj.animation_data.action = bpy.data.actions.new('NewAction')
         fcurve = obj.animation_data.action.fcurves.new(data_path='location', index=0)
-        # geonodes_modifier['Input_5'] = 0
         time_points = arrangement.calc_tempo_to_time()
         for time_point in time_points:
             frame = (time_point[0] * scene.render.fps * scene.render.fps_base) + props.frame_start
@@ -118,7 +124,30 @@ class GeometryNodes1:
         if track.color is not None:
             obj.color = track.color
 
-    def add_notes(self, clip, mesh, y):
+    def add_audio(self, clip: Clip, mesh, y: float):
+        for audio in clip.audio:
+            points = audio.to_points(.002, clip)
+            old_vertices_count = len(mesh.vertices)
+            old_edges_count = len(mesh.edges)
+
+            mesh.vertices.add(len(points))
+            mesh.edges.add(len(points))
+            for i in range(len(points)):
+                point = points[i]
+                mesh.vertices[len(mesh.vertices) - i - 1].co = (
+                    (point[0] + clip.time + audio.time) * self.props.zoom,
+                    -y - self.props.line_height / 2,
+                    self.props.thickness_clip + math.log(point[1] + 1) * .1
+                )
+                if i > 0:
+                    mesh.edges[old_edges_count + i].vertices = (
+                        old_vertices_count + i,
+                        old_vertices_count + i - 1,
+                    )
+        mesh.update()
+        mesh.validate()
+
+    def add_notes(self, clip: Clip, mesh, y: float):
         if len(clip.notes) == 0:
             return
         notes_range = clip.get_notes_range()
