@@ -8,10 +8,11 @@ import bpy
 
 
 def _get_tmp_fcurve(data_path="tmp"):
-    if "AudvisDawHelper" not in bpy.data.actions:
-        action = bpy.data.actions.new("AudvisDawHelper")
+    action_name = "AudvisDawHelperAction"
+    if action_name in bpy.data.actions:
+        action = bpy.data.actions[action_name]
     else:
-        action = bpy.data.actions["AudvisDawHelper"]
+        action = bpy.data.actions.new(action_name)
     for fcurve in action.fcurves:
         if fcurve.data_path == data_path:
             fcurve.keyframe_points.clear()
@@ -119,7 +120,7 @@ class Clip:
                 if note.key > res[1]:
                     res[1] = note.key
         if res is None:
-            return (0.0, 0.0)
+            return 0.0, 0.0
         return res[0], res[1]
 
     def consolidate_notes(self,
@@ -225,8 +226,7 @@ class Arrangement:
                 (0, 0),
                 (self.duration * (60 / self.basic_bpm), self.duration)
             ]
-        action = bpy.data.actions.new('tmp')
-        fcurve = action.fcurves.new(data_path='tmp', index=-1)
+        fcurve = _get_tmp_fcurve("tmp")
         fcurve.keyframe_points.add(len(self.tempo_changes))
         for i in range(len(self.tempo_changes)):
             point = fcurve.keyframe_points[i]
