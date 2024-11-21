@@ -74,6 +74,7 @@ class AUDVIS_OT_midiRealtimeDebug(Operator):
         analyzer = bpy.audvis.get_midi_realtime_analyzer(context.scene)
         if analyzer is not None:
             analyzer.on_pre_frame(context.scene, context.scene.frame_current_final)
+            analyzer.set_debug_mode(True)
         return {'RUNNING_MODAL'}
 
     def modal(self, context, event):
@@ -109,6 +110,9 @@ class AUDVIS_OT_midiRealtimeDebug(Operator):
         elif event.type == 'ESC':
             context.workspace.status_text_set("")
             context.window_manager.event_timer_remove(self.timer)
+            analyzer = bpy.audvis.get_midi_realtime_analyzer(context.scene)
+            if analyzer is not None:
+                analyzer.set_debug_mode(False)
             return {'FINISHED'}
         return {'PASS_THROUGH'}
 
