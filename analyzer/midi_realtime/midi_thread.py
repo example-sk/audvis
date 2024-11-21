@@ -70,6 +70,7 @@ class MidiThread(threading.Thread):
     regexp_control = re.compile(r"^(\d{1,2}) (c|)(\d{1,3}) (\d{1,3})$")
     _kill_all = False
     last_msg = None
+    debug_mode = False
 
     def run(self):
         self.python_path = glob(os.path.join(os.path.realpath(sys.prefix), 'bin', 'python*'))[0]
@@ -107,6 +108,8 @@ class MidiThread(threading.Thread):
                                                time=0,
                                                input_name=key,
                                                )
+                    if self.debug_mode:
+                        print(msg)
                     self.last_msg = msg
                     msgs.append(msg)
         if len(msgs):

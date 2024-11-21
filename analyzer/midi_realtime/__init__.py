@@ -26,6 +26,10 @@ class MidiRealtimeAnalyzer(Analyzer):
     def stop(self):
         pass
 
+    def set_debug_mode(self, enabled):
+        if self._thread is not None:
+            self._thread.debug_mode = enabled
+
     def on_pre_frame(self, scene, frame):
         if scene.audvis.midi_realtime.enable:
             lst = []
