@@ -1,5 +1,6 @@
-import bpy
 import math
+
+import bpy
 
 from ..arrangement import Arrangement, Clip
 from ...props.daw_arrangement import AudvisDawArrangement
@@ -59,10 +60,15 @@ class GeometryNodes1:
 
         clips_obj = bpy.data.objects.new('daw arrangement clips', mesh)
         clips_obj.parent = self.master_parent
+
         notes_obj = bpy.data.objects.new('daw arrangement notes', notes_mesh)
         notes_obj.parent = self.master_parent
+        notes_obj.location[2] = props.thickness_clip
+
         audio_obj = bpy.data.objects.new('daw arrangement soundwaves', audio_mesh)
         audio_obj.parent = self.master_parent
+        audio_obj.location[2] = props.thickness_clip
+
         if props.track_name_position == "0":
             pass
         elif props.track_name_position == "1":
@@ -73,17 +79,19 @@ class GeometryNodes1:
         collection.objects.link(clips_obj)
         collection.objects.link(notes_obj)
         collection.objects.link(audio_obj)
-        self.add_geonodes(clips_obj, self.props.thickness_clip)
-        self.add_geonodes(notes_obj, self.props.thickness_note)
+        self.add_geonodes(clips_obj, self.props.thickness_clip, "DawArrangement", True)
+        self.add_geonodes(notes_obj, self.props.thickness_note, "DawArrangement", True)
+        self.add_geonodes(audio_obj, self.props.thickness_note, "DawArrangementSoundwave", False)
         self.animate(clips_obj)
         self.animate(notes_obj)
         self.animate(audio_obj)
-        self.select(context, clips_obj)
+        self.select(context, self.master_parent)
 
-    def add_geonodes(self, obj, thickness: float):
-        geonodes_modifier = obj.modifiers.new(name="DawArrangement", type="NODES")
-        geonodes_modifier.node_group = bpy.data.node_groups['DawArrangement']
-        geonodes_modifier['Input_2'] = thickness
+    def add_geonodes(self, obj, thickness: float, node_group_name: str, set_thickness: bool):
+        geonodes_modifier = obj.modifiers.new(name=node_group_name, type="NODES")
+        geonodes_modifier.node_group = bpy.data.node_groups[node_group_name]
+        if set_thickness:
+            geonodes_modifier['Input_2'] = thickness
 
     def animate(self, obj):
         props = self.props
@@ -126,18 +134,26 @@ class GeometryNodes1:
 
     def add_audio(self, clip: Clip, mesh, y: float):
         for audio in clip.audio:
-            points = audio.to_points(.002, clip)
+            points = audio.to_points(self.props.audio_points_interval, clip)
             old_vertices_count = len(mesh.vertices)
             old_edges_count = len(mesh.edges)
 
             mesh.vertices.add(len(points))
             mesh.edges.add(len(points))
             for i in range(len(points)):
+                vertex_index = len(mesh.vertices) - i - 1
+                if clip.color is not None:
+                    mesh.attributes['clr'].data[vertex_index].color = clip.color
+                mesh.attributes['height'].data[vertex_index].value = self.props.line_height
                 point = points[i]
-                mesh.vertices[len(mesh.vertices) - i - 1].co = (
+                if self.props.audio_algorithm == 'log':
+                    val = math.log(point[1] + 1)
+                else:
+                    val = point[1]
+                mesh.vertices[vertex_index].co = (
                     (point[0] + clip.time + audio.time) * self.props.zoom,
                     -y - self.props.line_height / 2,
-                    self.props.thickness_clip + math.log(point[1] + 1) * .1
+                    val * self.props.audio_amplitude
                 )
                 if i > 0:
                     mesh.edges[old_edges_count + i].vertices = (
@@ -163,7 +179,7 @@ class GeometryNodes1:
             vertex.co = [
                 (note.time + clip.time) * self.props.zoom,
                 -y - (padding / 2) - ((notes_range[1] - note.key) / notes_range_size) * notes_line_height,
-                self.props.thickness_clip
+                0
             ]
             mesh.attributes['width'].data[index].value = note.duration * self.props.zoom
             mesh.attributes['height'].data[index].value = notes_line_height / notes_range_size

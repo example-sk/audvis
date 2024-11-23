@@ -1,4 +1,5 @@
 import copy
+import os.path
 from enum import Enum
 from typing import List, Tuple, Dict
 import aud
@@ -205,13 +206,19 @@ class Arrangement:
         self.audio_map = {}
 
     def load_audio(self, filepath: str, identifier: str):
+        if not os.path.exists(filepath):
+            print("File not found: ", filepath)
+            return
         sound = aud.Sound(filepath)
         sound = sound.rechannel(1)
-        sound = sound.resample(SAMPLERATE)
+        sound = sound.resample(SAMPLERATE, False)
         data = sound.data()
         data = np.reshape(data, len(data))
         data = abs(data)
         self.audio_map[identifier] = data
+
+    def is_audio_loaded(self, identifier: str):
+        return identifier in self.audio_map
 
     def calc_duration(self):
         max_time = 0.0

@@ -13,6 +13,7 @@ from ..props.daw_arrangement import AudvisDawArrangement
 class AUDVIS_OT_DawArrangementTo3D(bpy.types.Operator):
     bl_idname = "audvis.dawarrangementto3d"
     bl_label = "Import DAW Arrangement"
+    bl_options = {'UNDO'}
 
     # filepath: bpy.props.StringProperty(name=".dawarrangement file path", subtype='FILE_PATH', options={'SKIP_SAVE'})
     # filter_search: bpy.props.StringProperty(default="*.dawarrangement", options={'SKIP_SAVE'})
@@ -86,9 +87,15 @@ class AUDVIS_PT_DawprojectTo3d(AudVisButtonsPanel_Npanel):
         col.prop(props, "clip_padding")
         col.prop(props, "thickness_clip")
         col.prop(props, "thickness_note")
+        col = layout.column(align=True)
         col.prop(props, "track_name_position")
         col.prop(props, "track_name_bevel_depth")
         # col.prop(props, "output")
+        col = layout.column(align=True)
+        col.prop(props, "audio_points_interval")
+        col.prop(props, "audio_algorithm")
+        col.prop(props, "audio_amplitude")
+        col = layout.column(align=True)
         row = col.row()
         row.prop(props, "replace_last_collection")
         row.prop(props, "last_collection")

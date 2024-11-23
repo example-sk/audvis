@@ -1,14 +1,17 @@
 import gzip
 from xml.etree import ElementTree
+from xml.etree.ElementTree import Element
+import os
 
 from .ableton_color_map import ableton_color_map
-from ..arrangement import (Arrangement, Track, Clip, Note, TempoEvent)
+from ..arrangement import (Arrangement, Track, Clip, Note, TempoEvent, Audio)
 
 
 def parse(filepath) -> Arrangement:
     zip = gzip.open(filename=filepath, mode='r')
     xml = ElementTree.parse(zip)
-    arrangement = AbletonLiveSetParser(xml).arrangement
+    directory = os.path.dirname(os.path.realpath(filepath))
+    arrangement = AbletonLiveSetParser(xml, directory).arrangement
     return arrangement
 
 
@@ -18,7 +21,8 @@ class AbletonLiveSetParser:
     track_by_id: dict
     line_height = .3
 
-    def __init__(self, xml):
+    def __init__(self, xml, directory):
+        self.directory = directory
         self.track_by_id = {}
         self.xml = xml
         self.arrangement = Arrangement()
@@ -66,12 +70,12 @@ class AbletonLiveSetParser:
             self.parse_clips(track, track_el)
 
     def parse_clips(self, track, track_el: ElementTree):
-        clip_elements = track_el.findall('./DeviceChain/MainSequencer/ClipTimeable/ArrangerAutomation/Events/*')
-        for clip_el in clip_elements:
-            if clip_el.tag in ['MidiClip', 'AudioClip']:
-                self.parse_clip(track, clip_el)
+        for clip_el in track_el.findall('./DeviceChain/MainSequencer/ClipTimeable/ArrangerAutomation/Events/MidiClip'):
+            self.parse_midi_clip(track, clip_el)
+        for clip_el in track_el.findall('./DeviceChain/MainSequencer/Sample/ArrangerAutomation/Events/AudioClip'):
+            self.parse_audio_clip(track, clip_el)
 
-    def parse_clip(self, track: Track, clip_el):
+    def parse_clip(self, track: Track, clip_el: ElementTree) -> Clip:
         color = _parse_color(clip_el.find('./Color').attrib['Value'])
         start = float(clip_el.find('./CurrentStart').attrib['Value'])
         end = float(clip_el.find('./CurrentEnd').attrib['Value'])
@@ -81,6 +85,10 @@ class AbletonLiveSetParser:
             duration=end - start,
             color=color)
         track.clips.append(clip)
+        return clip
+
+    def parse_midi_clip(self, track: Track, clip_el):
+        clip = self.parse_clip(track, clip_el)
         for key_track in clip_el.findall('./Notes/KeyTracks/KeyTrack'):
             key = int(key_track.find('./MidiKey').attrib['Value'])
             for note_el in key_track.findall('./Notes/MidiNoteEvent'):
@@ -99,6 +107,34 @@ class AbletonLiveSetParser:
             clip.consolidate_notes(start_relative, True, loop_start, loop_end)
         else:
             clip.consolidate_notes(start_relative, False)
+
+    def parse_audio_clip(self, track, clip_el: Element):
+        clip = self.parse_clip(track, clip_el)
+        file_ref_el: Element = clip_el.find('./SampleRef/FileRef')
+        if file_ref_el is None:
+            return
+        relative_path_value = file_ref_el.find('./RelativePath').attrib['Value']
+        absolute_path_value = file_ref_el.find('./Path').attrib['Value']
+        if not self.arrangement.is_audio_loaded(relative_path_value):
+            self.arrangement.load_audio(os.path.join(self.directory, relative_path_value), relative_path_value)
+
+        raw_data = self.arrangement.audio_map[relative_path_value]
+        warps = []
+        for warp_el in clip_el.findall('./WarpMarkers/WarpMarker'):
+            warps.append((
+                float(warp_el.attrib['BeatTime']),
+                float(warp_el.attrib['SecTime']),
+            ))
+
+        clip.audio.append(Audio( # TODO: all time attributes
+            raw_data=raw_data,
+            warps=warps,
+            loop_start=0.0,
+            loop_end=clip.duration,
+            time=0.0,
+            duration=clip.duration,
+            play_start=0
+        ))
 
 
 def _parse_color(id: str):

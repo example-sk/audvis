@@ -17,7 +17,7 @@ class AudvisDawArrangement(bpy.types.PropertyGroup):
     line_height: bpy.props.FloatProperty(name="Line Height", default=.5, min=0)
     line_margin: bpy.props.FloatProperty(name="Line Margin", default=.1)
     clip_padding: bpy.props.FloatProperty(name="Clip Padding", default=10, min=0.0, max=100, subtype="PERCENTAGE")
-    track_name_position: bpy.props.EnumProperty(name="Track Name Z Position", items=[
+    track_name_position: bpy.props.EnumProperty(name="Track Name Z Position", default=2, items=[
         ("0", "Under Clips", ""),
         ("1", "Between Clip and Notes", ""),
         ("2", "Above Notes", ""),
@@ -31,8 +31,14 @@ class AudvisDawArrangement(bpy.types.PropertyGroup):
         ("geonodes1", "Geometry Nodes 1", ""),
         # ("geonodes2", "Geometry Nodes - Curves", ""),
     ], default="geonodes1")
-    replace_last_collection: bpy.props.BoolProperty(name="Replace Last Collection")
+    replace_last_collection: bpy.props.BoolProperty(name="Replace Last Collection", default=True)
     last_collection: bpy.props.PointerProperty(name="Last Collection", type=bpy.types.Collection)
+    audio_points_interval: bpy.props.FloatProperty(name="Audio Density of Points", default=.01, min=.001, max=.5)
+    audio_algorithm: bpy.props.EnumProperty(name="Audio Algorithm", items=[
+        ("raw", "Raw", ""),
+        ("log", "Logarithm", ""),
+    ])
+    audio_amplitude: bpy.props.FloatProperty(name="Audio Amplitude", default=.1, min=.001, max=100)
 
 
 classes = [
