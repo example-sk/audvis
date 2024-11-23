@@ -41,7 +41,7 @@ class Audio:
         self.duration = duration
         self.play_start = play_start
 
-    def to_points(self, interval: float, clip) -> List[Tuple[float, float]]:
+    def to_points(self, interval: float, clip, samplerate) -> List[Tuple[float, float]]:
         loop_duration = self.loop_end - self.loop_start
         result = []
         time_map_fcurve = _get_tmp_fcurve()
@@ -54,7 +54,7 @@ class Audio:
         duration = min(self.duration, clip.duration)
         while beats_x_cursor < duration:
             seconds_of_sound: float = time_map_fcurve.evaluate(fcurve_x_cursor)
-            index = int(seconds_of_sound * SAMPLERATE)
+            index = int(seconds_of_sound * samplerate)
             if index >= len(self.raw_data):
                 index = len(self.raw_data) - 1
             y_value = self.raw_data[index]
@@ -186,9 +186,6 @@ class TempoEvent:
         return "\ntime: {}, tempo: {}, interpolation: {}".format(self.time, self.tempo, self.interpolation)
 
 
-SAMPLERATE = 1000
-
-
 class Arrangement:
     name: str | None
     tracks: List[Track]
@@ -205,16 +202,15 @@ class Arrangement:
         self.duration: 0.0
         self.audio_map = {}
 
-    def load_audio(self, filepath: str, identifier: str):
+    def load_audio(self, filepath: str, identifier: str, samplerate: int):
         if not os.path.exists(filepath):
             print("File not found: ", filepath)
             return
         sound = aud.Sound(filepath)
         sound = sound.rechannel(1)
-        sound = sound.resample(SAMPLERATE, False)
+        sound = sound.resample(samplerate, False)
         data = sound.data()
         data = np.reshape(data, len(data))
-        data = abs(data)
         self.audio_map[identifier] = data
 
     def is_audio_loaded(self, identifier: str):

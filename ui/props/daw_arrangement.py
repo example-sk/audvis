@@ -33,7 +33,8 @@ class AudvisDawArrangement(bpy.types.PropertyGroup):
     ], default="geonodes1")
     replace_last_collection: bpy.props.BoolProperty(name="Replace Last Collection", default=True)
     last_collection: bpy.props.PointerProperty(name="Last Collection", type=bpy.types.Collection)
-    audio_points_interval: bpy.props.FloatProperty(name="Audio Density of Points", default=.01, min=.001, max=.5)
+    audio_internal_samplerate: bpy.props.IntProperty(name="Audio Internal Samplerate", default=50, min=1, max=10000)
+    audio_curve_samplerate: bpy.props.IntProperty(name="Audio Curve Points Samplerate", default=50, min=1, max=10000)
     audio_algorithm: bpy.props.EnumProperty(name="Audio Algorithm", items=[
         ("raw", "Raw", ""),
         ("log", "Logarithm", ""),

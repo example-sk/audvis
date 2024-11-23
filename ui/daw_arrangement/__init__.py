@@ -3,11 +3,12 @@ import pathlib
 import bpy
 
 from .outputs import (geometrynodes1)
-from .parser import (dawproject, als)
+from .parser import (dawproject, als, audiofile)
 from .arrangement import Arrangement
 from ..buttonspanel import AudVisButtonsPanel_Npanel
 from ..props.daw_arrangement import AudvisDawArrangement
 
+supported_audio_extensions = (".mp3", ".wav", ".aif", ".aiff", ".ac3", ".aac", ".opus", ".mp2", ".ogg", ".flac")
 
 # class AUDVIS_OT_DawArrangementTo3D(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
 class AUDVIS_OT_DawArrangementTo3D(bpy.types.Operator):
@@ -25,9 +26,11 @@ class AUDVIS_OT_DawArrangementTo3D(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         props = context.scene.audvis.daw_arrangement
-        if props.filepath.endswith(".dawproject"):
+        if props.filepath.lower().endswith(".dawproject"):
             return True
-        elif props.filepath.endswith(".als"):
+        elif props.filepath.lower().endswith(".als"):
+            return True
+        elif props.filepath.lower().endswith(supported_audio_extensions):
             return True
         return False
 
@@ -42,10 +45,12 @@ class AUDVIS_OT_DawArrangementTo3D(bpy.types.Operator):
             return {'CANCELLED'}
         filepath = bpy.path.abspath(props.filepath)
         parsed_arrangement = None
-        if filepath.endswith(".dawproject"):
-            parsed_arrangement = dawproject.parse(filepath)
-        elif filepath.endswith(".als"):
-            parsed_arrangement = als.parse(filepath)
+        if filepath.lower().endswith(".dawproject"):
+            parsed_arrangement = dawproject.parse(filepath, props)
+        elif filepath.lower().endswith(".als"):
+            parsed_arrangement = als.parse(filepath, props)
+        elif filepath.lower().endswith(supported_audio_extensions):
+            parsed_arrangement = audiofile.parse(filepath, props)
         # TODO: add other DAWs
         else:
             return {'CANCELLED'}
@@ -53,7 +58,7 @@ class AUDVIS_OT_DawArrangementTo3D(bpy.types.Operator):
         if props.output == "geonodes1":
             from .outputs import geometrynodes1
             geometrynodes1.GeometryNodes1().make(context, parsed_arrangement)
-        #elif props.output == "geonodes2":
+        # elif props.output == "geonodes2":
         #    from .outputs import geometrynodes2
         #    geometrynodes2.GeometryNodes2().make(context, parsed_arrangement)
         # self._render(context, parsed_arrangement)
@@ -92,7 +97,8 @@ class AUDVIS_PT_DawprojectTo3d(AudVisButtonsPanel_Npanel):
         col.prop(props, "track_name_bevel_depth")
         # col.prop(props, "output")
         col = layout.column(align=True)
-        col.prop(props, "audio_points_interval")
+        col.prop(props, "audio_curve_samplerate")
+        col.prop(props, "audio_internal_samplerate")
         col.prop(props, "audio_algorithm")
         col.prop(props, "audio_amplitude")
         col = layout.column(align=True)

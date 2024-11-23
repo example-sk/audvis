@@ -134,7 +134,7 @@ class GeometryNodes1:
 
     def add_audio(self, clip: Clip, mesh, y: float):
         for audio in clip.audio:
-            points = audio.to_points(self.props.audio_points_interval, clip)
+            points = audio.to_points(1 / self.props.audio_curve_samplerate, clip, self.props.audio_internal_samplerate)
             old_vertices_count = len(mesh.vertices)
             old_edges_count = len(mesh.edges)
 
@@ -147,9 +147,9 @@ class GeometryNodes1:
                 mesh.attributes['height'].data[vertex_index].value = self.props.line_height
                 point = points[i]
                 if self.props.audio_algorithm == 'log':
-                    val = math.log(point[1] + 1)
+                    val = math.log(abs(point[1]) + 1)
                 else:
-                    val = point[1]
+                    val = abs(point[1])
                 mesh.vertices[vertex_index].co = (
                     (point[0] + clip.time + audio.time) * self.props.zoom,
                     -y - self.props.line_height / 2,

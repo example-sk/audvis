@@ -7,11 +7,11 @@ from .ableton_color_map import ableton_color_map
 from ..arrangement import (Arrangement, Track, Clip, Note, TempoEvent, Audio)
 
 
-def parse(filepath) -> Arrangement:
+def parse(filepath, props) -> Arrangement:
     zip = gzip.open(filename=filepath, mode='r')
     xml = ElementTree.parse(zip)
     directory = os.path.dirname(os.path.realpath(filepath))
-    arrangement = AbletonLiveSetParser(xml, directory).arrangement
+    arrangement = AbletonLiveSetParser(xml, directory, props).arrangement
     return arrangement
 
 
@@ -21,7 +21,8 @@ class AbletonLiveSetParser:
     track_by_id: dict
     line_height = .3
 
-    def __init__(self, xml, directory):
+    def __init__(self, xml, directory, props):
+        self.props = props
         self.directory = directory
         self.track_by_id = {}
         self.xml = xml
@@ -116,7 +117,7 @@ class AbletonLiveSetParser:
         relative_path_value = file_ref_el.find('./RelativePath').attrib['Value']
         absolute_path_value = file_ref_el.find('./Path').attrib['Value']
         if not self.arrangement.is_audio_loaded(relative_path_value):
-            self.arrangement.load_audio(os.path.join(self.directory, relative_path_value), relative_path_value)
+            self.arrangement.load_audio(os.path.join(self.directory, relative_path_value), relative_path_value, self.props.audio_internal_samplerate)
 
         raw_data = self.arrangement.audio_map[relative_path_value]
         warps = []

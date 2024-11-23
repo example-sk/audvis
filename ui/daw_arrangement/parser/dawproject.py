@@ -6,10 +6,11 @@ import bpy
 from xml.etree import ElementTree
 
 from ..arrangement import (Arrangement, Track, Clip, Note, TempoEvent, Audio)
+from ...props.daw_arrangement import AudvisDawArrangement
 
 
-def parse(filepath) -> Arrangement:
-    return DawProjectParser(filepath).arrangement
+def parse(filepath, props: AudvisDawArrangement) -> Arrangement:
+    return DawProjectParser(filepath, props).arrangement
 
 
 class DawProjectParser:
@@ -18,7 +19,8 @@ class DawProjectParser:
     track_by_id: dict
     tempdir: tempfile.TemporaryDirectory
 
-    def __init__(self, filepath):
+    def __init__(self, filepath, props: AudvisDawArrangement):
+        self.props = props
         self.arrangement = Arrangement()
         self.tempdir = tempfile.TemporaryDirectory(prefix="daw_audio_", dir=bpy.app.tempdir)
         with zipfile.ZipFile(file=filepath, mode='r') as archive:
@@ -40,7 +42,7 @@ class DawProjectParser:
                 short_name = name[6:]
                 if "/" not in short_name:
                     new_path = archive.extract(name, self.tempdir.name)
-                    self.arrangement.load_audio(new_path, name)
+                    self.arrangement.load_audio(new_path, name, self.props.audio_internal_samplerate)
 
     def read_tempo(self):
         tempo_el = self.xml.find('./Transport/Tempo')
@@ -119,7 +121,8 @@ class DawProjectParser:
                 raw_data=raw_data,
                 warps=warps,
                 loop_start=float(clip_el.attrib['loopStart'] if "loopStart" in clip_el.attrib else 0.0),
-                loop_end=float(clip_el.attrib['loopEnd'] if "loopEnd" in clip_el.attrib else clip_el.attrib['duration']),
+                loop_end=float(
+                    clip_el.attrib['loopEnd'] if "loopEnd" in clip_el.attrib else clip_el.attrib['duration']),
                 time=float(subclip_el.attrib['time']),
                 duration=float(subclip_el.attrib['duration']),
                 play_start=float(subclip_el.attrib['playStart']) + float(clip_el.attrib['playStart'])
