@@ -30,7 +30,7 @@ class AbletonLiveSetParser:
         self.read_tempo()
         self.read_tracks()
         self.arrangement.calc_duration()
-        self.arrangement.print()
+        # self.arrangement.print()
 
     def read_tempo(self):
         tempo_el = self.xml.find('./LiveSet/MasterTrack/DeviceChain/Mixer/Tempo/Manual')
@@ -58,7 +58,7 @@ class AbletonLiveSetParser:
                 continue
             color_el = track_el.find('./Color')
             color = None
-            if color_el:
+            if color_el is not None:
                 color = _parse_color(color_el.attrib['Value'])
             name = track_el.find('./Name/EffectiveName').attrib['Value']
             name2 = track_el.find('./Name/UserName').attrib['Value']
