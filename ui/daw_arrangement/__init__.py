@@ -3,12 +3,13 @@ import pathlib
 import bpy
 
 from .outputs import (geometrynodes1)
-from .parser import (dawproject, als, audiofile)
+from .parser import (dawproject, als, audiofile, midi)
 from .arrangement import Arrangement
 from ..buttonspanel import AudVisButtonsPanel_Npanel
 from ..props.daw_arrangement import AudvisDawArrangement
 
 supported_audio_extensions = (".mp3", ".wav", ".aif", ".aiff", ".ac3", ".aac", ".opus", ".mp2", ".ogg", ".flac")
+
 
 # class AUDVIS_OT_DawArrangementTo3D(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
 class AUDVIS_OT_DawArrangementTo3D(bpy.types.Operator):
@@ -32,6 +33,8 @@ class AUDVIS_OT_DawArrangementTo3D(bpy.types.Operator):
             return True
         elif props.filepath.lower().endswith(supported_audio_extensions):
             return True
+        elif props.filepath.lower().endswith((".midi", ".mid")):
+            return True
         return False
 
     #    def invoke(self, context, event):
@@ -51,6 +54,8 @@ class AUDVIS_OT_DawArrangementTo3D(bpy.types.Operator):
             parsed_arrangement = als.parse(filepath, props)
         elif filepath.lower().endswith(supported_audio_extensions):
             parsed_arrangement = audiofile.parse(filepath, props)
+        elif props.filepath.lower().endswith((".midi", ".mid")):
+            parsed_arrangement = midi.parse(filepath, props)
         # TODO: add other DAWs
         else:
             return {'CANCELLED'}

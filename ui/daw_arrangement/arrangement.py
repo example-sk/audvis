@@ -1,7 +1,6 @@
 import copy
 import os.path
-from enum import Enum
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Literal
 import aud
 import numpy as np
 
@@ -164,18 +163,15 @@ class Track:
         self.clips = []
 
 
-class InterpolationType(Enum):
-    linear: 'linear'
-    constant: 'constant'
+InterpolationType = Literal["constant", "linear"]
 
 
 class TempoEvent:
     tempo: float
     interpolation: InterpolationType
     time: float | None
-    time_seconds: float | None
 
-    def __init__(self, tempo: float, interpolation: InterpolationType, time: float | None = None,
+    def __init__(self, tempo: float, interpolation: Literal["constant", "linear"], time: float | None = None,
                  bezier_controls: Tuple[Tuple[float, float], Tuple[float, float]] | None = None):
         self.tempo = tempo
         self.interpolation = interpolation
@@ -199,7 +195,7 @@ class Arrangement:
         self.tracks = []
         self.bpm = 110
         self.tempo_changes = []
-        self.duration: 0.0
+        self.duration = 0.0
         self.audio_map = {}
 
     def load_audio(self, filepath: str, identifier: str, samplerate: int):
@@ -259,7 +255,7 @@ class Arrangement:
         return result
 
     def print(self):
-        print('ARRANGEMENT duration: {}'.format(self.duration))
+        print('ARRANGEMENT duration: {} basic_bpm: {}'.format(self.duration, self.basic_bpm))
         for t in self.tracks:
             print(' TRACK: {}'.format(t.name))
             for clip in t.clips:
