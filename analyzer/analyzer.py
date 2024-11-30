@@ -85,8 +85,8 @@ class Analyzer:
         # if conf.env_enable:
         #     s = s.envelope(conf.env_attack, conf.env_release, conf.env_threshold, conf.env_arthreshold)
         #     print("envelope")
-        if hasattr(audvis, 'custom_filter'):
-            s = audvis.custom_filter(s);
+        # if hasattr(audvis, 'custom_filter'):
+        #     s = audvis.custom_filter(s);
         s = s.resample(self.samplerate, True)
         self.lastdata = s.data()
 
