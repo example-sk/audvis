@@ -10,7 +10,8 @@ class AUDVIS_OT_InstallAll(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return not bpy._audvis_module.startswith("bl_ext.")
+        return True
+        # return not bpy._audvis_module.startswith("bl_ext.")
 
     def execute(self, context):
         install_lib.PipInstaller().install()
