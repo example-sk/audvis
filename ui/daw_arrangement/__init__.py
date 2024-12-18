@@ -59,6 +59,7 @@ class AUDVIS_OT_DawArrangementTo3D(bpy.types.Operator):
         # TODO: add other DAWs
         else:
             return {'CANCELLED'}
+        parsed_arrangement.fix_zero_length_notes(props.zero_length_note_size, props.zero_length_note_threshold)
         self._import_data()
         if props.output == "geonodes1":
             from .outputs import geometrynodes1
@@ -97,6 +98,8 @@ class AUDVIS_PT_DawprojectTo3d(AudVisButtonsPanel_Npanel):
         col.prop(props, "clip_padding")
         col.prop(props, "thickness_clip")
         col.prop(props, "thickness_note")
+        col.prop(props, "zero_length_note_threshold")
+        col.prop(props, "zero_length_note_size")
         col = layout.column(align=True)
         col.prop(props, "track_name_position")
         col.prop(props, "track_name_bevel_depth")

@@ -13,6 +13,8 @@ class AudvisDawArrangement(bpy.types.PropertyGroup):
     zoom: bpy.props.FloatProperty(name="Zoom X", default=.3)
     thickness_clip: bpy.props.FloatProperty(name="Clip Thickness", default=.1)
     thickness_note: bpy.props.FloatProperty(name="Note Thickness", default=.05)
+    zero_length_note_threshold: bpy.props.FloatProperty(name="Zero Length Note Threshold", default=.001, min=.0, precision=3)
+    zero_length_note_size: bpy.props.FloatProperty(name="Zero Length Note Duration", default=.0, min=.0)
     frame_start: bpy.props.IntProperty(name="Start Frame", default=1)
     line_height: bpy.props.FloatProperty(name="Line Height", default=.5, min=0)
     line_margin: bpy.props.FloatProperty(name="Line Margin", default=.1)

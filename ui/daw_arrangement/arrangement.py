@@ -254,6 +254,15 @@ class Arrangement:
         result.append((calculated_time, x))
         return result
 
+    def fix_zero_length_notes(self, default_duration: float, threshold: float):
+        if default_duration <= threshold:
+            return
+        for track in self.tracks:
+            for clip in track.clips:
+                for note in clip.notes:
+                    if note.duration <= threshold:
+                        note.duration = default_duration
+
     def print(self):
         print('ARRANGEMENT duration: {} basic_bpm: {}'.format(self.duration, self.basic_bpm))
         for t in self.tracks:
