@@ -37,9 +37,11 @@ class GeometryNodes1:
         y = 0.0
         default_height = props.line_height
         y_margin = props.line_margin
+        cnt = 0
         for track in dawarrangement.tracks:
             if len(track.clips) == 0:
                 continue
+            cnt += 1
             txt_curve.body = txt_curve.body + track.name + "\n"
             self.render_track_name(track, collection, txt_parent, y)
             for clip in track.clips:
@@ -57,6 +59,9 @@ class GeometryNodes1:
                 self.add_notes(clip, notes_mesh, y)
                 self.add_audio(clip, audio_mesh, y)
             y = y + default_height + y_margin
+
+        if cnt == 0:
+            return
 
         clips_obj = bpy.data.objects.new('daw arrangement clips', mesh)
         clips_obj.parent = self.master_parent
@@ -86,6 +91,12 @@ class GeometryNodes1:
         self.animate(notes_obj)
         self.animate(audio_obj)
         self.select(context, self.master_parent)
+        if self.props.center_tracks:
+            self.master_parent.location[1] += (.5
+                                               * cnt
+                                               * (self.props.line_height + self.props.line_margin)
+                                               - self.props.line_margin * ((cnt + 1) % 2) / 2
+                                               )
 
     def add_geonodes(self, obj, thickness: float, node_group_name: str, set_thickness: bool):
         geonodes_modifier = obj.modifiers.new(name=node_group_name, type="NODES")
@@ -121,11 +132,11 @@ class GeometryNodes1:
         curve = bpy.data.curves.new(type="FONT", name='track name ' + track.name)
         curve.size = bpy.context.scene.audvis.daw_arrangement.line_height
         obj = bpy.data.objects.new('track name ' + track.name, curve)
-        curve.align_y = 'TOP'
+        curve.align_y = 'CENTER'
         curve.align_x = 'RIGHT'
         obj.data.body = track.name
         collection.objects.link(obj)
-        obj.location[1] = -y
+        obj.location[1] = -y - self.props.line_height / 2
         obj.parent = txt_parent
         curve.materials.append(bpy.data.materials['daw track name'])
         curve.bevel_depth = self.props.track_name_bevel_depth
@@ -146,15 +157,23 @@ class GeometryNodes1:
                     mesh.attributes['clr'].data[vertex_index].color = clip.color
                 mesh.attributes['height'].data[vertex_index].value = self.props.line_height
                 point = points[i]
-                if self.props.audio_algorithm == 'log':
-                    val = math.log(abs(point[1]) + 1)
+                val = point[1]
+                if self.props.audio_use_abs:
+                    val = abs(val)
+                    if self.props.audio_algorithm == 'log':
+                        val = math.log(val + 1)
+                if self.props.audio_horizontal:
+                    mesh.vertices[vertex_index].co = (
+                        (point[0] + clip.time + audio.time) * self.props.zoom,
+                        -y - self.props.line_height / 2 - val * self.props.audio_amplitude,
+                        0
+                    )
                 else:
-                    val = abs(point[1])
-                mesh.vertices[vertex_index].co = (
-                    (point[0] + clip.time + audio.time) * self.props.zoom,
-                    -y - self.props.line_height / 2,
-                    val * self.props.audio_amplitude
-                )
+                    mesh.vertices[vertex_index].co = (
+                        (point[0] + clip.time + audio.time) * self.props.zoom,
+                        -y - self.props.line_height / 2,
+                        val * self.props.audio_amplitude
+                    )
                 if i > 0:
                     mesh.edges[old_edges_count + i].vertices = (
                         old_vertices_count + i,
