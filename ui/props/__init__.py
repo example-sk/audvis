@@ -10,14 +10,14 @@ from . import (
     party,
     obj,
     midi,
-    daw_arrangement,
+    daw_arrangement, realtimeprops,
 )
 
 classes = [
               animationnodes.AudvisAnimationnodesProperties,
               valuesaud.AudvisValuesAudProperties,
               party.AudvisPartyProperties,
-          ] + midi.classes + daw_arrangement.classes + [
+          ] + midi.classes + daw_arrangement.classes + realtimeprops.classes + [
               spectrogram.AudvisSpectrogramProperties,
               spectrogram.AudvisSpectrogramMetaProperties,
               spreaddrivers.AudvisSceneSpreaddriversProperties,

@@ -8,6 +8,7 @@ from . import (
     midi,
     spreaddrivers,
     daw_arrangement,
+    realtimeprops,
 )
 from .. import (
     values,
@@ -126,6 +127,10 @@ class AudvisSceneProperties(bpy.types.PropertyGroup):
     realtime_save_format: bpy.props.EnumProperty(name="Save Format", items=realtime.recording.get_available_formats)
     realtime_loadassequence: bpy.props.BoolProperty(name="Load as Sequence", default=True)
     realtime_save_pack: bpy.props.BoolProperty(name=" - Pack after Load", default=True)
+
+    realtime_multi_enable: bpy.props.BoolProperty(name="Multiple Realtime Sources")
+    realtime_multi_list: bpy.props.CollectionProperty(type=realtimeprops.AudvisRealtimeProperties)
+    realtime_multi_index: bpy.props.IntProperty(default=0)
 
     # video
     video_webcam_enable: bpy.props.BoolProperty(name="AudVis Video", update=webcam_toggle_callback)

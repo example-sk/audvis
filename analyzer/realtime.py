@@ -98,10 +98,10 @@ class RealtimeAnalyzer(Analyzer):
     supported = None
     stream = None
     current_stream_name = None
-    requested_stream_name = None
     sd = None
     thread = None
     recorder = AudVisRecorder()
+    device_name = None
 
     def load(self):
         try:
@@ -157,7 +157,7 @@ class RealtimeAnalyzer(Analyzer):
             if False and prefs.realtime_device_use_global:
                 self.thread.requested_name = prefs.realtime_device
             else:
-                self.thread.requested_name = scene.audvis.realtime_device
+                self.thread.requested_name = self.device_name
             self.thread.requested_channels = scene.audvis.channels
         else:
             self.thread.requested_name = None

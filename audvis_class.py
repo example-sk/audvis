@@ -21,6 +21,7 @@ from .switchscenes import try_switch_scenes
 class AudVis:
     sequence_analyzers = {}
     realtime_analyzer = None
+    realtime_multi_analyzers = {}
     midi_realtime_analyzer = None
     midi_file_analyzer = None
     video_analyzer = None
@@ -81,12 +82,22 @@ class AudVis:
         seq = kwargs.get('seq')
         seq_channel = kwargs.get('seq_channel')
         additive = kwargs.get('additive', False)
-
-        if self.realtime_analyzer \
-                and self.realtime_analyzer.supported \
+        if scene.audvis.realtime_multi_enable \
                 and "seq" not in kwargs \
                 and "midi" not in kwargs \
                 and "midi_control" not in kwargs:
+            for item in list(scene.audvis.realtime_multi_list):
+                device = kwargs.get('device')
+                if item.enable and (
+                        device is None or device == item.name) and item.uuid in self.realtime_multi_analyzers:
+                    rt_analyzer = self.realtime_multi_analyzers[item.uuid]
+                    val += rt_analyzer.driver(low, high, ch, additive)
+        elif self.realtime_analyzer \
+                and self.realtime_analyzer.supported \
+                and "seq" not in kwargs \
+                and "midi" not in kwargs \
+                and "midi_control" not in kwargs \
+                and not scene.audvis.realtime_multi_enable:
             val += self.realtime_analyzer.driver(low, high, ch, additive)
 
         if scene.audvis.midi_realtime.enable \
@@ -176,13 +187,23 @@ class AudVis:
         Analyzer.is_first_frame = scene.frame_current_final == scene.frame_start
         Analyzer.additive_reset_onfirstframe = scene.audvis.value_additive_reset
         subframes = scene.audvis.subframes
-        if scene.audvis.realtime_enable and self.realtime_analyzer is None:
+        if scene.audvis.realtime_enable and not scene.audvis.realtime_multi_enable and self.realtime_analyzer is None:
             self.realtime_analyzer = RealtimeAnalyzer()
+            self.realtime_analyzer.device_name = scene.audvis.realtime_device
             self.realtime_analyzer.load()
+        if scene.audvis.realtime_enable and scene.audvis.realtime_multi_enable:
+            self.fix_realtime_multi(scene.audvis)
         for x in range(subframes, -1, -1):
             frame = scene.frame_current_final + x / (subframes + 1)
             if self.realtime_analyzer is not None and self.realtime_analyzer.supported:
+                self.realtime_analyzer.device_name = scene.audvis.realtime_device
                 self.realtime_analyzer.on_pre_frame(scene, frame)
+            if scene.audvis.realtime_multi_enable:
+                for item in scene.audvis.realtime_multi_list:
+                    if item.enable and item.uuid in self.realtime_multi_analyzers:
+                        rt_analyzer = self.realtime_multi_analyzers[item.uuid]
+                        rt_analyzer.device_name = item.device_name
+                        rt_analyzer.on_pre_frame(scene, frame)
             if scene.audvis.sequence_enable:
                 self._update_sequences(scene, frame)
             if scene.audvis.midi_realtime.enable:
@@ -197,6 +218,21 @@ class AudVis:
         self._get_spectrogram_generator().on_pre_frame(scene, frame)
         nonstop_baking.bake(scene)
         # print("________ FRAME UPDATE ", "%f" % (time.time() - start))
+
+    def fix_realtime_multi(self, props):
+        enabled_uuids = []
+        for item in props.realtime_multi_list:
+            if item.enable:
+                enabled_uuids.append(item.uuid)
+                if item.uuid not in self.realtime_multi_analyzers:
+                    self.realtime_multi_analyzers[item.uuid] = RealtimeAnalyzer()
+                    self.realtime_multi_analyzers[item.uuid].device_name = item.device_name
+                    self.realtime_multi_analyzers[item.uuid].load()
+                self.realtime_multi_analyzers[item.uuid].device_name = item.device_name
+        for i, (key, analyzer) in enumerate(self.realtime_multi_analyzers.items()):
+            if key not in enabled_uuids:
+                analyzer.stop()
+                del self.realtime_multi_analyzers[key]
 
     def get_video_analyzer(self, scene):
         if scene.audvis.video_webcam_enable and self.video_analyzer is None:
