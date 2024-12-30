@@ -229,8 +229,9 @@ class AudVis:
                     self.realtime_multi_analyzers[item.uuid].device_name = item.device_name
                     self.realtime_multi_analyzers[item.uuid].load()
                 self.realtime_multi_analyzers[item.uuid].device_name = item.device_name
-        for i, (key, analyzer) in enumerate(self.realtime_multi_analyzers.items()):
+        for key in list(self.realtime_multi_analyzers.keys()):
             if key not in enabled_uuids:
+                analyzer = self.realtime_multi_analyzers[key]
                 analyzer.stop()
                 del self.realtime_multi_analyzers[key]
 

@@ -63,6 +63,7 @@ class AUDVIS_PT_realtimeNpanel(AudVisButtonsPanel_Npanel):
             col.label(text="Realtime not supported. Install sounddevice first:")
             col.operator("audvis.install", text="Install python packages")
         err = bpy.audvis.get_realtime_error()
+        col = self.layout.column(align=True)
         col.prop(context.scene.audvis, 'realtime_switchscenes')
         if err:
             col.label(text="Error: " + err)
@@ -78,59 +79,43 @@ class AUDVIS_PT_realtimeNpanel(AudVisButtonsPanel_Npanel):
         if len(props.realtime_multi_list) > 0:
             item_props = props.realtime_multi_list[props.realtime_multi_index]
             col = self.layout.column(align=True)
-            col.prop(item_props, "device_name")
-            col.operator('audvis.realtime_multi_select_device')
+            col.label(text="Device name: {}".format(item_props.device_name))
 
 
 class AUDVIS_OT_realtimeMultiAdd(bpy.types.Operator):
     bl_idname = "audvis.realtime_multi_add"
     bl_label = "Add RealTime Device Input"
     bl_description = ""
+    bl_options = {'UNDO'}
+
+    device: bpy.props.EnumProperty(name="Input Device", items=input_device_options)
 
     @classmethod
     def poll(cls, context):
         return True
 
-    def execute(self, context):
-        audvis = bpy.audvis
-        audvis.midi_input_device_options = None
-        props = context.scene.audvis
-        new_item = props.realtime_multi_list.add()
-        new_item.uuid = uuid.uuid4().hex
-        props.realtime_multi_index = len(props.realtime_multi_list) - 1
-        i = len(props.realtime_multi_list)
-        name = 'rt{}'.format(i)
-        for j in range(1000):
-            if name in props.realtime_multi_list:
-                i += 1
-                name = 'rt{}'.format(i)
-            else:
-                break
-        new_item.name = name
-        return {'FINISHED'}
-
-
-class AUDVIS_OT_realtimeMultiSelectDevice(bpy.types.Operator):
-    bl_idname = 'audvis.realtime_multi_select_device'
-    bl_description = ''
-    bl_label = 'Select RealTime Device'
-
-    bl_options = {'UNDO'}
-
     def invoke(self, context, event):
-        return context.window_manager.invoke_props_dialog(self, width=250)
-
-    def execute(self, context):
-        props = context.scene.audvis.realtime_multi_list[context.scene.audvis.realtime_multi_index]
-        props.device_name = props.device
-        props.name = props.device_name
-        return {'FINISHED'}
+        res = context.window_manager.invoke_props_dialog(self, width=250)
+        return res
 
     def draw(self, context):
         layout = self.layout
-        props = context.scene.audvis.realtime_multi_list[context.scene.audvis.realtime_multi_index]
-        layout.prop(props, "device")
+        layout.prop(self, "device")
         # layout.popover('CYCLES_RENDER_PT_sampling')
+
+    def execute(self, context):
+        new_item = context.scene.audvis.realtime_multi_list.add()
+        context.scene.audvis.realtime_multi_index = len(context.scene.audvis.realtime_multi_list) - 1
+        new_item.uuid = uuid.uuid4().hex
+        props = context.scene.audvis.realtime_multi_list[context.scene.audvis.realtime_multi_index]
+        props.device_name = self.device
+        try_name = self.device
+        for i in range(2, 100):
+            if try_name not in context.scene.audvis.realtime_multi_list:
+                props.name = try_name
+                break
+            try_name = "{} {}".format(self.device, i)
+        return {'FINISHED'}
 
 
 class AUDVIS_OT_realtimeMultiRemove(bpy.types.Operator):
@@ -145,6 +130,8 @@ class AUDVIS_OT_realtimeMultiRemove(bpy.types.Operator):
     def execute(self, context):
         props = context.scene.audvis
         props.realtime_multi_list.remove(props.realtime_multi_index)
+        if props.realtime_multi_index >= len(props.realtime_multi_list):
+            props.realtime_multi_index = 0
         return {'FINISHED'}
 
 
@@ -177,7 +164,6 @@ def unregister():
 
 
 classes = [
-              AUDVIS_OT_realtimeMultiSelectDevice,
               AUDVIS_OT_realtimeMultiAdd,
               AUDVIS_OT_realtimeMultiRemove,
               AUDVIS_UL_realtimeDeviceList,

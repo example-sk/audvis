@@ -1,11 +1,8 @@
 import threading
 import time
-
-import bpy
 import numpy as np
 
-from .analyzer import Analyzer
-from .recording import AudVisRecorder
+from ..recording import AudVisRecorder
 
 
 class RealtimeThread(threading.Thread):
@@ -43,7 +40,7 @@ class RealtimeThread(threading.Thread):
             'dtype': 'float32',
             'channels': req_channels,
             'callback': self._stream_cb,
-            'blocksize': 256 * 2,  # TODO: select
+            'blocksize': 256,  # TODO: select
             'device': None,
         }
         i = 0
@@ -59,6 +56,7 @@ class RealtimeThread(threading.Thread):
         self.samplerate = self.stream.samplerate
 
     def run(self):
+        self.last_chunks = []
         while self._thread_continue():
             try:
                 self._restart_if_needed()
@@ -81,6 +79,9 @@ class RealtimeThread(threading.Thread):
         try:
             self.recorder.write(indata, int(self.samplerate), self.stream.channels)
 
+            self.last_chunks.append(np.copy(indata))
+            if len(self.last_chunks) > 1000:
+                self.last_chunks = self.last_chunks[-1000:]
             self.error = None
             if self.callback_data is None:
                 self.callback_data = indata
@@ -91,85 +92,3 @@ class RealtimeThread(threading.Thread):
                     self.callback_data = np.concatenate((self.callback_data[-1048576:], indata))
         except Exception as e:
             print('audvis realtime recorder', e)
-
-
-class RealtimeAnalyzer(Analyzer):
-    status = 'init'
-    supported = None
-    stream = None
-    current_stream_name = None
-    sd = None
-    thread = None
-    recorder = AudVisRecorder()
-    device_name = None
-
-    def load(self):
-        try:
-            import sounddevice as sd
-            self.sd = sd
-            self.supported = True
-        except Exception as e:
-            self.supported = False
-            # print("AudVis", e)
-            return
-        scene = bpy.context.scene
-        self.on_pre_frame(scene, bpy.context.scene.frame_current_final)
-
-    def recorder_stop(self, folder, format):
-        self.recorder.stop()
-        self.stop()
-        path = self.recorder.save_data(folder, format)
-        self.restart()
-        return path
-
-    def kill(self):
-        if self.thread is not None:
-            self.thread.kill_me = True
-
-    def get_error(self):
-        if self.thread is not None:
-            return self.thread.error
-
-    def stop(self):
-        self.thread.requested_name = None
-        self.empty()
-
-    def restart(self):
-        self._load_stream(bpy.context.scene, True)
-
-    def on_pre_frame(self, scene, frame):
-        self._load_stream(scene)
-        self._read_synchronous(scene)
-        if self.lastdata is not None:
-            self.calculate_fft()
-
-    def _load_stream(self, scene, force_reload=False):
-        if self.thread is None:
-            t = RealtimeThread(daemon=True)
-            t.recorder = self.recorder
-            t.sd = self.sd
-            self.thread = t
-            t.start()
-        if force_reload:
-            self.thread.force_reload = True
-        if scene.audvis.realtime_enable:
-            prefs = bpy.context.preferences.addons[bpy.audvis._module_name].preferences
-            if False and prefs.realtime_device_use_global:
-                self.thread.requested_name = prefs.realtime_device
-            else:
-                self.thread.requested_name = self.device_name
-            self.thread.requested_channels = scene.audvis.channels
-        else:
-            self.thread.requested_name = None
-            self.thread.requested_channels = 1
-
-    def _read_synchronous(self, scene):
-        if self.thread is None:
-            self.empty()
-            return
-
-        if self.thread is None or self.thread.callback_data is None:
-            self.empty()
-        else:
-            self.samplerate = self.thread.samplerate
-            self.lastdata = self.thread.callback_data[-int(scene.audvis.sample_calc * self.samplerate):]
