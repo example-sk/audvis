@@ -11,12 +11,12 @@ from dataclasses import dataclass
 # https://www.midi.org/specifications-old/item/table-1-summary-of-midi-message
 from glob import glob
 from queue import Queue
+from time import time_ns
 
-from ...ui import install_lib
+from ..recording import AudVisRecorder
 
-NOTE_OFF = 8  # 1000xxxx
-NOTE_ON = 9  # 1001xxxx
-COMMON_KEY = '_audvis_common'
+NOTE_MAX_AGE = 10 * 1_000_000_000
+NOTE_MIN_DURATION = int(.1 * 1_000_000_000)
 
 nested_dict = lambda: collections.defaultdict(nested_dict)
 
@@ -29,6 +29,30 @@ class _MidiNoteMessage:
     time: int
     channel: int
     input_name: str
+
+
+@dataclass
+class _MidiNote:
+    note: int
+    time_start: int
+    time_end: int
+    velocity: int
+    channel: int
+    input_name: str
+
+    def age(self, now: int = None):
+        if self.time_end == 0:
+            return 0
+        if now is None:
+            now = time_ns()
+        return now - self.time_end
+
+    def duration(self, now: int = None):
+        if self.time_end > 0:
+            return self.time_end - self.time_start
+        if now is None:
+            now = time_ns()
+        return now - self.time_start
 
 
 @dataclass
@@ -55,6 +79,34 @@ class _AsyncFileReader(threading.Thread):
         return not self.is_alive() and self.queue.empty()
 
 
+class LastNotesList(list):
+
+    def clear_old_notes(self, now=None):
+        if now is None:
+            now = time_ns()
+        for i in reversed(range(len(self))):
+            if self[i].age(now) > NOTE_MAX_AGE:
+                del self[i]
+
+    def process_note_msg(self, msg: _MidiNoteMessage):
+        self.clear_old_notes()
+        if msg.on and msg.velocity > 0:
+            self.append(_MidiNote(
+                note=msg.note,
+                time_start=msg.time,
+                time_end=0,
+                velocity=msg.velocity,
+                channel=msg.channel,
+                input_name=msg.input_name
+            ))
+        else:
+            for n in self:
+                if n.time_end == 0 and n.channel == msg.channel and n.note == msg.note and n.input_name == msg.input_name:
+                    n.time_end = max(msg.time, n.time_start + NOTE_MIN_DURATION)
+                    # break
+        print(len(self), [(n.note, n.velocity) for n in self])
+
+
 class MidiThread(threading.Thread):
     requested_devices = None
     inputs = None
@@ -65,16 +117,18 @@ class MidiThread(threading.Thread):
     callback_data = None
     error = None
     force_reload = False
-    recorder = None  # type: AudVisRecorder
+    recorder: AudVisRecorder = None
     python_path = None
     regexp_control = re.compile(r"^(\d{1,2}) (c|)(\d{1,3}) (\d{1,3})$")
     _kill_all = False
     last_msg = None
     debug_mode = False
+    last_notes_list = None
 
     def run(self):
         self.python_path = glob(os.path.join(os.path.realpath(sys.prefix), 'bin', 'python*'))[0]
         self.inputs = {}
+        self.last_notes_list = LastNotesList()
         self.data = nested_dict()
         self.data_controls = nested_dict()
         self.requested_devices = []
@@ -97,7 +151,7 @@ class MidiThread(threading.Thread):
                             channel=int(match.group(1)),
                             control=int(match.group(3)),
                             value=int(match.group(4)),
-                            time=0,
+                            time=time_ns(),
                             input_name=key,
                         )
                     else:
@@ -105,7 +159,7 @@ class MidiThread(threading.Thread):
                                                channel=int(match.group(1)),
                                                note=int(match.group(3)),
                                                velocity=int(match.group(4)),
-                                               time=0,
+                                               time=time_ns(),
                                                input_name=key,
                                                )
                     if self.debug_mode:
@@ -132,6 +186,7 @@ class MidiThread(threading.Thread):
                         del data_notes[msg.input_name][msg.channel]
                         if len(data_notes[msg.input_name]) == 0:
                             del data_notes[msg.input_name]
+                self.last_notes_list.process_note_msg(msg)
             elif type(msg) == _MidiControlMessage:
                 data_controls[msg.input_name][msg.channel][msg.control] = msg.value * 1.0
         self.data = data_notes
