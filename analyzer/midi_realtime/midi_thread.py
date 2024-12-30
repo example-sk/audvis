@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from glob import glob
 from queue import Queue
 from time import time_ns
+from typing import IO
 
 from ..recording import AudVisRecorder
 
@@ -65,7 +66,7 @@ class _MidiControlMessage:
 
 
 class _AsyncFileReader(threading.Thread):
-    def __init__(self, fd):
+    def __init__(self, fd: IO[str] | None):
         self.queue = Queue()
         assert callable(fd.readline)
         threading.Thread.__init__(self, daemon=True)
