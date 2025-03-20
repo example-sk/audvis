@@ -1,15 +1,8 @@
 import bpy
 
-from .. import midi as ui_midi
-
-
-# midi_port = global_settings.GlobalSettings('midi_device')
-# midi_enable = global_settings.GlobalSettings('midi_enable', default=False)
-
 
 class AudvisDawArrangement(bpy.types.PropertyGroup):
     filepath: bpy.props.StringProperty(name="File Path", subtype="FILE_PATH", description="*.dawproject or *.als file")
-    input_name: bpy.props.EnumProperty(name="Input Device", items=ui_midi.input_device_options)
     zoom: bpy.props.FloatProperty(name="Zoom X", default=.3)
     thickness_clip: bpy.props.FloatProperty(name="Clip Thickness", default=.1)
     thickness_note: bpy.props.FloatProperty(name="Note Thickness", default=.05)
