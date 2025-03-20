@@ -82,11 +82,11 @@ class AudVis:
         seq = kwargs.get('seq')
         seq_channel = kwargs.get('seq_channel')
         additive = kwargs.get('additive', False)
-        if scene.audvis.realtime_multi_enable \
+        if scene.audvis.realtime_multi.enable \
                 and "seq" not in kwargs \
                 and "midi" not in kwargs \
                 and "midi_control" not in kwargs:
-            for item in list(scene.audvis.realtime_multi_list):
+            for item in list(scene.audvis.realtime_multi.list):
                 device = kwargs.get('device')
                 if item.enable and (
                         device is None or device == item.name) and item.uuid in self.realtime_multi_analyzers:
@@ -97,7 +97,7 @@ class AudVis:
                 and "seq" not in kwargs \
                 and "midi" not in kwargs \
                 and "midi_control" not in kwargs \
-                and not scene.audvis.realtime_multi_enable:
+                and not scene.audvis.realtime_multi.enable:
             val += self.realtime_analyzer.driver(low, high, ch, additive)
 
         if scene.audvis.midi_realtime.enable \
@@ -187,19 +187,19 @@ class AudVis:
         Analyzer.is_first_frame = scene.frame_current_final == scene.frame_start
         Analyzer.additive_reset_onfirstframe = scene.audvis.value_additive_reset
         subframes = scene.audvis.subframes
-        if scene.audvis.realtime_enable and not scene.audvis.realtime_multi_enable and self.realtime_analyzer is None:
+        if scene.audvis.realtime_enable and not scene.audvis.realtime_multi.enable and self.realtime_analyzer is None:
             self.realtime_analyzer = RealtimeAnalyzer()
             self.realtime_analyzer.device_name = scene.audvis.realtime_device
             self.realtime_analyzer.load()
-        if scene.audvis.realtime_enable and scene.audvis.realtime_multi_enable:
+        if scene.audvis.realtime_enable and scene.audvis.realtime_multi.enable:
             self.fix_realtime_multi(scene.audvis)
         for x in range(subframes, -1, -1):
             frame = scene.frame_current_final + x / (subframes + 1)
             if self.realtime_analyzer is not None and self.realtime_analyzer.supported:
                 self.realtime_analyzer.device_name = scene.audvis.realtime_device
                 self.realtime_analyzer.on_pre_frame(scene, frame)
-            if scene.audvis.realtime_multi_enable:
-                for item in scene.audvis.realtime_multi_list:
+            if scene.audvis.realtime_multi.enable:
+                for item in scene.audvis.realtime_multi.list:
                     if item.enable and item.uuid in self.realtime_multi_analyzers:
                         rt_analyzer = self.realtime_multi_analyzers[item.uuid]
                         rt_analyzer.device_name = item.device_name
@@ -221,7 +221,7 @@ class AudVis:
 
     def fix_realtime_multi(self, props):
         enabled_uuids = []
-        for item in props.realtime_multi_list:
+        for item in props.realtime_multi.list:
             if item.enable:
                 enabled_uuids.append(item.uuid)
                 if item.uuid not in self.realtime_multi_analyzers:

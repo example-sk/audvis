@@ -53,8 +53,8 @@ class AUDVIS_PT_realtimeNpanel(AudVisButtonsPanel_Npanel):
             col.label(text="Realtime device was set")
             col.label(text="in AudVis preferences")
         elif supported:
-            col.prop(context.scene.audvis, 'realtime_multi_enable')
-            if context.scene.audvis.realtime_multi_enable:
+            # col.prop(context.scene.audvis.realtime_multi, 'enable')  # TODO: finish the multi realtime mode
+            if context.scene.audvis.realtime_multi.enable:
                 self.draw_multi_mode(context, col)
             else:
                 col.prop(context.scene.audvis, 'realtime_device')
@@ -69,15 +69,15 @@ class AUDVIS_PT_realtimeNpanel(AudVisButtonsPanel_Npanel):
             col.label(text="Error: " + err)
 
     def draw_multi_mode(self, context, col):
-        props = context.scene.audvis
+        props = context.scene.audvis.realtime_multi
         row = col.row()
-        row.template_list("AUDVIS_UL_realtimeDeviceList", "realtime_multi_list", props,
-                          "realtime_multi_list", props, "realtime_multi_index")
+        row.template_list("AUDVIS_UL_realtimeDeviceList", "list", props,
+                          "list", props, "index")
         row = col.row()
         row.operator('audvis.realtime_multi_add')
         row.operator('audvis.realtime_multi_remove')
-        if len(props.realtime_multi_list) > 0:
-            item_props = props.realtime_multi_list[props.realtime_multi_index]
+        if len(props.list) > 0 and props.index < len(props.list):
+            item_props = props.list[props.index]
             col = self.layout.column(align=True)
             col.label(text="Device name: {}".format(item_props.device_name))
 
@@ -104,14 +104,14 @@ class AUDVIS_OT_realtimeMultiAdd(bpy.types.Operator):
         # layout.popover('CYCLES_RENDER_PT_sampling')
 
     def execute(self, context):
-        new_item = context.scene.audvis.realtime_multi_list.add()
-        context.scene.audvis.realtime_multi_index = len(context.scene.audvis.realtime_multi_list) - 1
+        new_item = context.scene.audvis.realtime_multi.list.add()
+        context.scene.audvis.realtime_multi.index = len(context.scene.audvis.realtime_multi.list) - 1
         new_item.uuid = uuid.uuid4().hex
-        props = context.scene.audvis.realtime_multi_list[context.scene.audvis.realtime_multi_index]
+        props = context.scene.audvis.realtime_multi.list[context.scene.audvis.realtime_multi.index]
         props.device_name = self.device
         try_name = self.device
         for i in range(2, 100):
-            if try_name not in context.scene.audvis.realtime_multi_list:
+            if try_name not in context.scene.audvis.realtime_multi.list:
                 props.name = try_name
                 break
             try_name = "{} {}".format(self.device, i)
@@ -129,9 +129,9 @@ class AUDVIS_OT_realtimeMultiRemove(bpy.types.Operator):
 
     def execute(self, context):
         props = context.scene.audvis
-        props.realtime_multi_list.remove(props.realtime_multi_index)
-        if props.realtime_multi_index >= len(props.realtime_multi_list):
-            props.realtime_multi_index = 0
+        props.realtime_multi.list.remove(props.realtime_multi.index)
+        if props.realtime_multi.index >= len(props.realtime_multi.list):
+            props.realtime_multi.index = 0
         return {'FINISHED'}
 
 
