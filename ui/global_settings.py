@@ -11,13 +11,14 @@ class GlobalSettings:
         self.setting_name = setting_name
         self.default = default
 
-    def _get_obj(self):
+    def _get_obj(self, create=False):
         name = 'audvis_global_settings'
         if name in bpy.data.objects:
             obj = bpy.data.objects[name]
         else:
             obj = bpy.data.objects.new(name, None)
-            # obj.use_fake_user = True  # TODO
+        if create:
+            obj.use_fake_user = True
         return obj
 
     def get(self, audvis_settings):
@@ -27,7 +28,7 @@ class GlobalSettings:
         return 0
 
     def set(self, audvis_settings, value):
-        self._get_obj()[self.setting_name] = value
+        self._get_obj(create=True)[self.setting_name] = value
 
     def getter(self):  # override "TypeError: get keyword: expected a function type, not a method"
         def anon(audvis_settings):
