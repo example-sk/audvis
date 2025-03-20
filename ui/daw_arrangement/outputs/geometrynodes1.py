@@ -26,7 +26,6 @@ class GeometryNodes1:
         props.last_collection = collection
         self.master_parent = bpy.data.objects.new('dawarrangement superparent', None)
         collection.objects.link(self.master_parent)
-        txt_curve = bpy.data.curves.new(type="FONT", name='track names')
         txt_parent = bpy.data.objects.new('track labels parent', None)
         txt_parent.parent = self.master_parent
         collection.objects.link(txt_parent)
@@ -42,7 +41,6 @@ class GeometryNodes1:
             if len(track.clips) == 0:
                 continue
             cnt += 1
-            txt_curve.body = txt_curve.body + track.name + "\n"
             self.render_track_name(track, collection, txt_parent, y)
             for clip in track.clips:
                 mesh.vertices.add(1)
