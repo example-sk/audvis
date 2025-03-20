@@ -75,7 +75,10 @@ def register():
     spread_drivers.register()
     bpy.types.Scene.audvis = bpy.props.PointerProperty(type=props.scene.AudvisSceneProperties)
     bpy.types.Object.audvis = bpy.props.PointerProperty(type=props.obj.AudvisObjectProperties)
-    bpy.types.SoundSequence.audvis = bpy.props.PointerProperty(type=props.sequence.AudvisSequenceProperties)
+    if hasattr(bpy.types, "SoundSequence"):
+        bpy.types.SoundSequence.audvis = bpy.props.PointerProperty(type=props.sequence.AudvisSequenceProperties)
+    else:
+        bpy.types.SoundStrip.audvis = bpy.props.PointerProperty(type=props.sequence.AudvisSequenceProperties)
     bpy.types.Window.audvis = bpy.props.PointerProperty(type=AudvisWindowProperties)
     preferences.on_npanelname_update(bpy.context.preferences.addons[bpy.audvis._module_name].preferences, bpy.context)
 
@@ -88,7 +91,10 @@ def unregister():
     video.unregister()
     del bpy.types.Scene.audvis
     del bpy.types.Object.audvis
-    del bpy.types.SoundSequence.audvis
+    if hasattr(bpy.types, "SoundSequence"):
+        del bpy.types.SoundSequence.audvis
+    else:
+        del bpy.types.SoundStrip.audvis
     del bpy.types.Window.audvis
 
 

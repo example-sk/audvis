@@ -17,7 +17,7 @@ class GlobalSettings:
             obj = bpy.data.objects[name]
         else:
             obj = bpy.data.objects.new(name, None)
-        obj.use_fake_user = True
+            # obj.use_fake_user = True  # TODO
         return obj
 
     def get(self, audvis_settings):
