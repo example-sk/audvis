@@ -5,8 +5,8 @@ import sys
 bl_info = {
     "name": "AudVis - audio visualization driver",
     "author": "example.sk",
-    "version": (7, 1, 0),
-    "blender": (2, 80, 0),
+    "version": (7, 2, 0),
+    "blender": (3, 6, 0),
     "location": "View 3D > Sidebar > AudVis Tab",
     "description": (
         "Tools for awesome audio visualizations. You can use Sequence Analyzer to render a music video, or Realtime Analyzer combined with Party Mode to impress people on your party."),
