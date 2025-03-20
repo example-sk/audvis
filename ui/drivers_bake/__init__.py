@@ -37,6 +37,7 @@ class DriverBakery:
             # bpy.data.NodeTree,
             bpy.data.objects,
             bpy.data.particles,
+            bpy.data.pointclouds,
             bpy.data.scenes,
             bpy.data.speakers,
             bpy.data.textures,
