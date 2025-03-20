@@ -5,7 +5,7 @@ import sys
 bl_info = {
     "name": "AudVis - audio visualization driver",
     "author": "example.sk",
-    "version": (7, 2, 0),
+    "version": (7, 2, 1),
     "blender": (3, 6, 0),
     "location": "View 3D > Sidebar > AudVis Tab",
     "description": (
