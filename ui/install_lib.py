@@ -191,9 +191,9 @@ class PipInstaller(threading.Thread):
         if self._selected_target == 'addon-modules':
             libs_path_mkdir()
         self._ensure_pip()
-        self._install_packages(["cffi", "sounddevice", "soundfile", "mido", "pygame"])
+        self._install_packages(["cffi", "sounddevice", "mido", "pygame"])
         # self._install_packages(["python-rtmidi"])
-        self._install_packages(["opencv-python"], ["--no-deps"])
+        self._install_packages(["opencv-python", "soundfile"], ["--no-deps"])
 
     def _install_packages(self, packages, add_params=None):
         if add_params is None:
