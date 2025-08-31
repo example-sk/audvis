@@ -47,6 +47,7 @@ def register2():
             _reload_modules()
 
     audvis = AudVis()
+    bpy.app.driver_namespace['audvis'] = audvis.driver
     bpy.audvis = audvis
     audvis._module_name = __package__
     register_script = audvis.register_script
