@@ -196,8 +196,52 @@ class AudvisMotionScatterProperties(bpy.types.PropertyGroup):
         ('vertices', "Vertices", "Every vertex / point moves alone - faces and strokes stretch like a web"),
     ])
     seed: bpy.props.IntProperty(name="Seed", default=1)
+    style: bpy.props.EnumProperty(name="Style", default='explode', items=[
+        ('explode', "Explode", "Pieces fly out along a direction and come back - scrubbable"),
+        ('fluid', "Fluid", "Pieces drift in a Navier-Stokes flow stirred by the sound."
+                           " Simulated frame by frame: play from the start"),
+    ])
     amount: bpy.props.FloatProperty(name="Amount", default=0, min=0, max=1, subtype='FACTOR',
-                                    description="0 = assembled, 1 = fully scattered. Keyframe it")
+                                    description="0 = assembled, 1 = fully scattered. Fluid: how hard the flow"
+                                                " is stirred. Keyframe it")
+    fluid_resolution: bpy.props.IntProperty(name="Resolution", default=24, min=8, soft_max=40, max=64,
+                                            description="Fluid grid cells per side. Higher = finer swirls,"
+                                                        " slower (24: ~10 ms per frame)")
+    fluid_domain: bpy.props.FloatProperty(name="Domain Size", default=3, min=1.2, soft_max=8,
+                                          description="Size of the fluid box around the object (x object size)")
+    fluid_burst: bpy.props.FloatProperty(name="Sound Burst", default=6, soft_min=-20, soft_max=30,
+                                         description="Sound pushes the fluid out from the center"
+                                                     " (negative: sucks it in)")
+    fluid_swirl: bpy.props.FloatProperty(name="Swirl", default=2, soft_min=-10, soft_max=10,
+                                         description="Stir around the Z axis, harder with the sound")
+    fluid_turbulence: bpy.props.FloatProperty(name="Turbulence", default=2, min=0, soft_max=20,
+                                              description="Random swirly currents (curl noise)")
+    fluid_turbulence_scale: bpy.props.FloatProperty(name="Turbulence Scale", default=2, min=.1, soft_max=8,
+                                                    description="Higher = smaller eddies")
+    fluid_turbulence_speed: bpy.props.FloatProperty(name="Turbulence Speed", default=.3, min=0, soft_max=3,
+                                                    description="How fast the currents change")
+    fluid_audio_turbulence: bpy.props.FloatProperty(name="Sound → Turbulence", default=2, soft_min=0, soft_max=10)
+    fluid_vorticity: bpy.props.FloatProperty(name="Vorticity", default=2, min=0, soft_max=20,
+                                             description="Keep small swirls alive and spinning (vorticity"
+                                                         " confinement). High = wild, curly flow")
+    fluid_audio_vorticity: bpy.props.FloatProperty(name="Sound → Vorticity", default=0, soft_min=0, soft_max=10)
+    fluid_viscosity: bpy.props.FloatProperty(name="Viscosity", default=.05, min=0, max=1, subtype='FACTOR',
+                                             description="Thick, smooth flow (honey) vs thin and chaotic (smoke)")
+    fluid_damping: bpy.props.FloatProperty(name="Damping", default=2, min=0, soft_max=10,
+                                           description="The flow calms down by itself (per second)")
+    fluid_buoyancy: bpy.props.FloatProperty(name="Buoyancy", default=0, soft_min=-5, soft_max=5,
+                                            description="Rise (smoke) or sink")
+    fluid_follow: bpy.props.FloatProperty(name="Follow", default=.7, min=0, max=1, subtype='FACTOR',
+                                          description="1 = pieces float exactly with the fluid,"
+                                                      " lower = heavier pieces that lag behind")
+    fluid_spin: bpy.props.FloatProperty(name="Spin", default=1, min=0, soft_max=5,
+                                        description="Pieces turn with the swirls of the flow")
+    fluid_return: bpy.props.FloatProperty(name="Return", default=.3, min=0, soft_max=3,
+                                          description="Pull the pieces back into shape (or into the Morph"
+                                                      " Target). 0 = they drift away for good")
+    fluid_keep_on_loop: bpy.props.BoolProperty(name="Keep Flowing on Loop", default=True,
+                                               description="When playback loops back to the start, keep the"
+                                                           " flow going instead of snapping back together")
     audio: bpy.props.PointerProperty(type=AudvisMotionAudioProperties)
     audio_amount: bpy.props.FloatProperty(name="Sound → Amount", default=1, soft_min=-2, soft_max=2)
     audio_elements: bpy.props.IntProperty(name="Bands / Delay Steps", default=8, min=1, soft_max=64,

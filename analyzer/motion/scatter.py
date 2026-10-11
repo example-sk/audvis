@@ -8,7 +8,7 @@ import math
 
 import numpy as np
 
-from . import fields, morph
+from . import fields, fluid, morph
 from .audio import apply_cc_mods
 from .lib import scene_time
 
@@ -320,9 +320,44 @@ def _ensure_morph(settings, cache, owner_matrix):
                                      cache["area"], settings.seed)
 
 
-def _run(engine, obj, settings, cache, values, t, mods, field_list, write, influence=1.0):
+def compute_fluid(settings, cache, values, t, mods, matrix, field_list, scene, frame):
+    """Fluid style: pieces drift in a Navier-Stokes flow driven by sound (see fluid.py)."""
+    signature = (settings.fluid_resolution, round(settings.fluid_domain, 4), settings.seed)
+    flow = cache.get("flow")
+    if flow is None or cache.get("flow_signature") != signature:
+        flow = cache["flow"] = fluid.Flow(cache["centers"], settings.fluid_resolution, settings.fluid_domain,
+                                          settings.seed)
+        cache["flow_signature"] = signature
+        flow.frame = frame
+    centers = cache["centers"]
+    v = piece_values(settings, cache, values)
+    energy = float(np.mean(values)) if len(values) else 0.0
+    push = v - energy if settings.audio.spread != 'same' else None  # each band kicks its own pieces
+    targets, scale = centers, 1 - settings.shrink * min(1.0, mods["amount"])
+    target = cache.get("morph")
+    if target is not None:
+        morph_e = _ease(_staggered(settings, cache, mods["morph"] + settings.audio_morph * v))
+        targets = centers + (target["centers"] - centers) * morph_e[:, None]
+        scale = scale * (1 + (target["fit"] * settings.morph_scale - 1) * morph_e)
+    fps = scene.render.fps / scene.render.fps_base
+
+    def run_step(dt):
+        flow.step(settings, energy, t, dt, targets, push, flow=mods["amount"])
+
+    if not flow.advance(frame, scene.frame_start, scene.frame_end, fps, run_step, settings.fluid_keep_on_loop):
+        flow.reset(centers, frame)
+    positions = flow.pos
+    if field_list:
+        positions = fields.apply_local(positions, matrix, field_list, weight=np.ones(len(positions)))
+    return flow.vertices(cache["rest"], centers, cache["pieces"], positions, scale)
+
+
+def _run(engine, obj, settings, cache, values, t, mods, field_list, write, influence=1.0, scene=None, frame=None):
     _ensure_morph(settings, cache, obj.matrix_world)
-    co = compute(settings, cache, values, t, mods, obj.matrix_world, field_list)
+    if settings.style == 'fluid' and scene is not None:
+        co = compute_fluid(settings, cache, values, t, mods, obj.matrix_world, field_list, scene, frame)
+    else:
+        co = compute(settings, cache, values, t, mods, obj.matrix_world, field_list)
     if co is not None and influence < 1:  # fade towards the assembled shape
         co = None if influence <= 0 else cache["rest"] + (co - cache["rest"]) * influence
     if co is None:
@@ -349,7 +384,8 @@ def update(engine, obj, scene, frame):
             return
         cache = engine.cached(key, (mesh.name, len(mesh.vertices), settings.seed, settings.prepared_id),
                               lambda: mesh_cache(mesh, settings.seed))
-        _run(engine, obj, settings, cache, values, t, mods, field_list, lambda co: write(mesh, co), influence)
+        _run(engine, obj, settings, cache, values, t, mods, field_list, lambda co: write(mesh, co), influence,
+             scene, frame)
     elif gp_supported(obj):
         for layer in obj.data.layers:
             gp_frame = layer.current_frame()
@@ -359,7 +395,8 @@ def update(engine, obj, scene, frame):
             n = len(drawing.attributes[REST].data)
             cache = engine.cached(key + (layer.name, gp_frame.frame_number),
                                   (n, settings.seed, settings.prepared_id), lambda: gp_cache(drawing, settings.seed))
-            _run(engine, obj, settings, cache, values, t, mods, field_list, lambda co: gp_write(drawing, co), influence)
+            _run(engine, obj, settings, cache, values, t, mods, field_list, lambda co: gp_write(drawing, co),
+                 influence, scene, frame)
 
 
 def write(mesh, co):

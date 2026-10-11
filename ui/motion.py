@@ -462,12 +462,14 @@ def _set_up(obj, effect):
     return settings.collection is not None or settings.instancer is not None
 
 
-def scene_effects(scene, engine=None):
-    """(object, effect) of every effect that is on, or was switched off by Release / Stop."""
+def scene_effects(scene, engine=None, include_idle=False):
+    """(object, effect) of every effect that is on, or was switched off by Release / Stop.
+    include_idle: also effects that are set up but off - so a stopped effect stays in the live strip."""
     released = engine.released if engine is not None else set()
     for obj in scene.objects:
         for effect in EFFECTS:
-            if getattr(obj.audvis, effect).enable or (obj.name, effect) in released:
+            if getattr(obj.audvis, effect).enable or (obj.name, effect) in released \
+                    or (include_idle and _set_up(obj, effect)):
                 yield obj, effect
 
 
@@ -800,7 +802,7 @@ class AUDVIS_PT_motionNpanel(AudVisButtonsPanel_Npanel):
             op.action, op.effect, op.object_name = action, 'all', ""
         col.prop(props, "motion_fade_time")
 
-        effects = list(scene_effects(scene, engine))
+        effects = list(scene_effects(scene, engine, include_idle=True))
         if effects:
             col = box.column(align=True)
             active = _active(context)
@@ -913,13 +915,19 @@ class AUDVIS_PT_motionScatterNpanel(_MotionSubpanel):
 
     @classmethod
     def poll(cls, context):
-        obj = _active(context)
-        return obj is not None and obj.type in ('MESH', 'GREASEPENCIL')
+        return _active(context) is not None  # always shown, so it can't seem to disappear
+
+    def draw_header(self, context):
+        if _active(context).type in ('MESH', 'GREASEPENCIL'):
+            super().draw_header(context)
 
     def draw(self, context):
         obj = _active(context)
         s = obj.audvis.scatter
         layout = self.layout
+        if obj.type not in ('MESH', 'GREASEPENCIL'):
+            layout.label(text="Select a mesh or Grease Pencil object", icon='INFO')
+            return
         if scatter_prepared(obj):
             draw_live(layout, context, obj, 'scatter')
         draw_presets(layout, 'scatter')
@@ -935,6 +943,12 @@ class AUDVIS_PT_motionScatterNpanel(_MotionSubpanel):
         if not prepared:
             return
 
+        row = layout.row(align=True)
+        row.scale_y = 1.2
+        row.prop(s, "style", expand=True)
+        if s.style == 'fluid':
+            self._draw_fluid(context, layout, obj, s)
+            return
         col = layout.column(align=True)
         col.prop(s, "amount", slider=True)
         col.prop(s, "seed")
@@ -978,6 +992,72 @@ class AUDVIS_PT_motionScatterNpanel(_MotionSubpanel):
         col.prop(s, "audio_amount")
         draw_cc(layout, context, s.cc, 'scatter')
         draw_attractors(layout, s, 'scatter')
+
+    @staticmethod
+    def _draw_fluid(context, layout, obj, s):
+        col = layout.column(align=True)
+        col.prop(s, "amount", text="Flow", slider=True)
+        row = col.row(align=True)
+        row.prop(s, "fluid_resolution")
+        row.operator("audvis.motion_fluid_reset", text="", icon='FILE_REFRESH')
+        col.prop(s, "fluid_domain")
+        col.prop(s, "seed")
+
+        box = layout.box().column(align=True)
+        box.label(text="Flow", icon='MOD_FLUIDSIM')
+        box.prop(s, "fluid_swirl")
+        box.prop(s, "fluid_turbulence")
+        box.prop(s, "fluid_turbulence_scale")
+        box.prop(s, "fluid_turbulence_speed")
+        box.prop(s, "fluid_vorticity")
+        box.prop(s, "fluid_viscosity", slider=True)
+        box.prop(s, "fluid_damping")
+        box.prop(s, "fluid_buoyancy")
+
+        box = layout.box().column(align=True)
+        box.label(text="Pieces", icon='MOD_EXPLODE')
+        box.prop(s, "fluid_follow", slider=True)
+        box.prop(s, "fluid_spin")
+        box.prop(s, "fluid_return")
+        box.prop(s, "shrink", slider=True)
+        box.prop(s, "fluid_keep_on_loop")
+
+        box = layout.box().column(align=True)
+        box.label(text="Morph", icon='MOD_SIMPLEDEFORM')
+        box.prop(s, "morph_target")
+        if s.morph_target is not None:
+            box.prop(s, "morph", slider=True)
+            box.prop(s, "morph_scale")
+            box.prop(s, "audio_morph")
+            box.label(text="Return pulls the pieces into the target")
+
+        layout.label(text="Sound")
+        draw_audio(layout, context, s.audio)
+        col = layout.column(align=True)
+        if s.audio.spread != 'same':
+            col.prop(s, "audio_elements")
+        col.prop(s, "fluid_burst")
+        col.prop(s, "fluid_audio_turbulence")
+        col.prop(s, "fluid_audio_vorticity")
+        draw_cc(layout, context, s.cc, 'scatter')
+        draw_attractors(layout, s, 'scatter')
+        layout.label(text="Simulated: play from the first frame to render", icon='INFO')
+
+
+class AUDVIS_OT_motionFluidReset(Operator):
+    """Start the flow over: pieces back in place, fluid at rest"""
+    bl_idname = "audvis.motion_fluid_reset"
+    bl_label = "Reset Fluid"
+
+    def execute(self, context):
+        obj = _active(context)
+        engine = _engine()
+        if obj is None or engine is None:
+            return {'CANCELLED'}
+        for key in [k for k in engine._cache if k[:2] == ("scatter", obj.name)]:
+            engine.invalidate(key)
+        refresh(context=context)
+        return {'FINISHED'}
 
 
 class AUDVIS_PT_motionOrbitNpanel(_MotionSubpanel):
@@ -1078,6 +1158,7 @@ classes = motion_presets.classes + [
     AUDVIS_OT_motionFade,
     AUDVIS_OT_motionLayerRemove,
     AUDVIS_OT_motionSelect,
+    AUDVIS_OT_motionFluidReset,
     AUDVIS_PT_motionNpanel,
     AUDVIS_PT_motionCascadeNpanel,
     AUDVIS_PT_motionScatterNpanel,
