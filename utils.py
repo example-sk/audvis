@@ -46,9 +46,15 @@ def call_ops_override(operator, override, **kwargs):
 
 # reason: https://developer.blender.org/docs/release_notes/4.4/python_api/#video-sequencer-strips
 def get_all_vse_strips(scene):
+    if scene.sequence_editor is None:
+        return ()
     if hasattr(scene.sequence_editor, 'strips_all'):
         return scene.sequence_editor.strips_all
     return scene.sequence_editor.sequences_all
+
+
+def get_vse_strips(editor):
+    return getattr(editor, "strips" if hasattr(editor, "strips") else "sequences")
 
 
 # reason: https://developer.blender.org/docs/release_notes/4.4/upgrading/slotted_actions/
@@ -66,13 +72,14 @@ def action_get_fcurves(action):
 
 def action_remove_fcurves(action, data_path_starts_with):
     if hasattr(action, 'fcurves'):
-        for fcurve in action.fcurves:
+        for fcurve in list(action.fcurves):
             if (fcurve.data_path.startswith(data_path_starts_with)):
                 action.fcurves.remove(fcurve)
+        return
     for a in action.layers:
         for b in a.strips:
             for c in b.channelbags:
-                for fcurve in c.fcurves:
+                for fcurve in list(c.fcurves):
                     if (fcurve.data_path.startswith(data_path_starts_with)):
                         c.fcurves.remove(fcurve)
 
@@ -81,4 +88,4 @@ def action_add_fcurve(action, datablock, data_path, index):
     if hasattr(action, "fcurves"):  # backcompat before Blender 5.0
         return action.fcurves.new(data_path=data_path, index=index)
     else:
-        return action.fcurve_ensure_for_datablock(datablock, data_path='location', index=0)
+        return action.fcurve_ensure_for_datablock(datablock, data_path=data_path, index=max(index, 0))

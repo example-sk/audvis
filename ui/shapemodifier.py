@@ -4,6 +4,7 @@ from bpy.types import (
 )
 
 from ..utils import action_remove_fcurves
+from ..grease_pencil_compat import is_grease_pencil, remove_frame
 from . import ui_lib
 from .buttonspanel import AudVisButtonsPanel_Npanel
 from .hz_label import hz_label, notes_label
@@ -46,10 +47,10 @@ def animation_type_enum(self, context):
     if obj.type in ('CURVE', 'SURFACE'):
         ret.append(("curve-radius", "Curve Radius", ""))
         ret.append(("curve-tilt", "Curve Tilt", ""))
-    if obj.type == 'GPENCIL':
+    if is_grease_pencil(obj):
         ret += [
-            ("pressure", "Pressure", ""),
-            ("strength", "Strength", ""),
+            ("pressure", "Radius" if obj.type == "GREASEPENCIL" else "Pressure", ""),
+            ("strength", "Opacity" if obj.type == "GREASEPENCIL" else "Strength", ""),
         ]
     return ret
 
@@ -80,7 +81,7 @@ class AUDVIS_PT_shapemodifierNpanel(AudVisButtonsPanel_Npanel):
         op.url = "https://developer.blender.org/T60094"
 
         obj = context.active_object or context.object
-        if obj is None or obj.type not in ['MESH', 'CURVE', 'SURFACE', 'LATTICE', 'GPENCIL']:
+        if obj is None or obj.type not in ['MESH', 'CURVE', 'SURFACE', 'LATTICE', 'GPENCIL', 'GREASEPENCIL']:
             col = self.layout.column(align=True)
             col.label(text="Select Object")
             return
@@ -130,7 +131,7 @@ class AUDVIS_PT_shapemodifierNpanel(AudVisButtonsPanel_Npanel):
         if props.additive in ('sin', 'sin2', 'mod'):
             col.prop(props, "additive_phase_multiplier")
             col.prop(props, "additive_phase_offset")
-        if obj.type == 'GPENCIL':
+        if is_grease_pencil(obj):
             col.prop_search(props, "gpencil_layer", obj.data, "layers",
                             icon='OUTLINER_DATA_GP_LAYER')
         if props.freq_seq_type == "midi":
@@ -248,7 +249,7 @@ class AUDVIS_OT_shapemodifierunbake(Operator):
         obj = context.active_object or context.object
         if obj is None:
             return False
-        if obj.type == 'GPENCIL':
+        if is_grease_pencil(obj):
             has_zero_frame = False
             for layer in obj.data.layers:
                 if has_zero_frame:
@@ -263,7 +264,7 @@ class AUDVIS_OT_shapemodifierunbake(Operator):
 
     def execute(self, context):
         obj = context.active_object or context.object
-        if obj.type == 'GPENCIL':
+        if is_grease_pencil(obj):
             self._clean_gpencil(obj)
         else:
             for func in [self._delete_shape_key, self._delete_vertgroup, self._delete_vertexcolor, self._delete_uvmap]:
@@ -278,7 +279,7 @@ class AUDVIS_OT_shapemodifierunbake(Operator):
         for layer in obj.data.layers:
             for frame in list(layer.frames):
                 if frame.frame_number > 0:
-                    layer.frames.remove(frame)
+                    remove_frame(layer, frame)
 
     def _clean_fcurves(self, animation_data, data_path_pattern):
         try:

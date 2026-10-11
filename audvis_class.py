@@ -10,6 +10,7 @@ from .analyzer import nonstop_baking
 from .analyzer.analyzer import Analyzer
 from .analyzer.midi_file import MidiFileAnalyzer
 from .analyzer.midi_realtime import MidiRealtimeAnalyzer
+from .analyzer.motion import MotionEngine
 from .analyzer.realtime import RealtimeAnalyzer
 from .analyzer.sequence import SequenceAnalyzer
 from .analyzer.shapemodifier import ShapeModifier
@@ -34,6 +35,7 @@ class AudVis:
     input_device_options = None
     midi_input_device_options = None
     shape_modifier = None
+    motion_engine = None
     spectrogram_generator = None
     _mido_initialized = False
 
@@ -72,6 +74,10 @@ class AudVis:
     def driver(self, low=None, high=None, ch=None, **kwargs):
         start = time.time()
         scene = bpy.context.scene
+        if "cc" in kwargs:  # audvis(cc=7): MIDI CC as 0..1, not scaled by the Driver Values settings
+            channel = int(ch) if ch not in (None, 'all') else -1
+            value = self.midi_cc(kwargs["cc"], channel, kwargs.get("device"))
+            return 0.0 if value is None else value
 
         if "midi" not in kwargs and "midi_control" not in kwargs and ch is None:
             ch = scene.audvis.default_channel_sound
@@ -146,6 +152,7 @@ class AudVis:
         if self.video_analyzer is not None:
             self.video_analyzer.stop()
         self.shape_modifier = None
+        self.motion_engine = None
         self.spectrogram_generator = None
         self.scripting.reset()
         self.sequence_analyzers = {}
@@ -216,6 +223,7 @@ class AudVis:
         if video_analyzer is not None and video_analyzer.supported:
             video_analyzer.on_pre_frame(scene, frame)
         self._get_shape_modifier().on_pre_frame(scene, frame)
+        self._get_motion_engine().on_pre_frame(scene, frame)
         self._get_spectrogram_generator().on_pre_frame(scene, frame)
         nonstop_baking.bake(scene)
         # print("________ FRAME UPDATE ", "%f" % (time.time() - start))
@@ -259,6 +267,31 @@ class AudVis:
             self.shape_modifier = ShapeModifier()
             self.shape_modifier.load(self.driver)
         return self.shape_modifier
+
+    def _get_motion_engine(self):
+        if self.motion_engine is None:
+            self.motion_engine = MotionEngine(self.driver, self.midi_cc)
+        return self.motion_engine
+
+    def midi_cc(self, control, channel=-1, device=None):
+        """Last value (0..1) of a MIDI CC from the realtime MIDI input, None if not received yet.
+        Read directly, so Motion FX live controls aren't scaled by the driver value settings."""
+        analyzer = self.midi_realtime_analyzer
+        if analyzer is None or not bpy.context.scene.audvis.midi_realtime.enable:
+            return None
+        data = analyzer._last_data_controls
+        if not data:
+            return None
+        device_key = analyzer.device_key(device)
+        for key, device_data in list(data.items()):
+            if device_key is not None and key != device_key:
+                continue
+            for ch, controls in list(device_data.items()):
+                if channel >= 0 and ch != channel:
+                    continue
+                if control in controls:
+                    return controls[control] / 127
+        return None
 
     def _get_spectrogram_generator(self):
         if self.spectrogram_generator is None:

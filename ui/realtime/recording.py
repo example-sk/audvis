@@ -4,6 +4,7 @@ import sys
 import bpy
 
 from ..buttonspanel import AudVisButtonsPanel_Npanel
+from ...utils import get_vse_strips
 
 
 def _get_audvis():
@@ -50,7 +51,7 @@ class AUDVIS_OT_RealtimeRecordStop(bpy.types.Operator):
         path = audvis.realtime_analyzer.recorder_stop(bpy.app.tempdir, context.scene.audvis.realtime_save_format)
         if context.scene.audvis.realtime_loadassequence:
             context.scene.sequence_editor_create()  # ensure sequence_editor exists
-            sequence = context.scene.sequence_editor.sequences.new_sound(name="AudVis Record", filepath=path, channel=1,
+            sequence = get_vse_strips(context.scene.sequence_editor).new_sound(name="AudVis Record", filepath=path, channel=1,
                                                                          frame_start=context.scene.frame_start)
             if context.scene.audvis.realtime_save_pack:
                 sequence.sound.pack()

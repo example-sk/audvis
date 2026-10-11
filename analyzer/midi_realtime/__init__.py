@@ -15,6 +15,23 @@ class MidiRealtimeAnalyzer(Analyzer):
             return None
         return thread.last_msg
 
+    def snapshot(self):
+        """Latest (notes, controls, note-on counts), straight from the thread - also while paused.
+        The thread replaces these dicts instead of changing them, so reading them is safe."""
+        thread = self._thread
+        if thread is None or thread.data is None:
+            return None
+        return thread.data, thread.data_controls, thread.note_counts
+
+    def device_key(self, device):
+        """Hardware input name for a device given by its name in the MIDI Realtime panel (or hardware name)."""
+        if not device or self._thread is None:
+            return None
+        for item in self._thread.requested_devices or []:
+            if device in (item['custom_name'], item['device_name']):
+                return item['device_name']
+        return device
+
     def load(self):
         self._thread = midi_thread.MidiThread(daemon=True)
         self._thread.start()
@@ -55,15 +72,14 @@ class MidiRealtimeAnalyzer(Analyzer):
         elif "midi" in kwargs:
             midi_note = kwargs.get("midi", None)
             if (type(midi_note) is list or type(midi_note) is tuple) and len(midi_note) in [2, 3]:
-                return self._midi_multi_note_driver(low=None, high=None, ch=None, **kwargs)
+                return self._midi_multi_note_driver(low=None, high=None, ch=ch, **kwargs)
             else:
                 midi_note = midi_note_to_number(kwargs['midi'])
         else:
             return 0
         if midi_note >= 127 or midi_note < 0:
             return 0
-        device_id = kwargs.get('device', None)
-        device_key = None
+        device_key = self.device_key(kwargs.get('device'))
         for key in data.keys():
             if device_key is not None and key != device_key:
                 continue

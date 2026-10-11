@@ -1,8 +1,28 @@
+import atexit
 import threading
 import time
+import weakref
 import numpy as np
 
 from ..recording import AudVisRecorder
+
+_threads = weakref.WeakSet()
+_atexit_registered = False
+
+
+def shutdown_all():
+    # Close every PortAudio stream from the main thread while PortAudio is still alive.
+    for t in list(_threads):
+        t.shutdown()
+
+
+def register_atexit():
+    # atexit runs LIFO, so registering after sounddevice is imported makes this run before
+    # sounddevice's own exit handler terminates PortAudio.
+    global _atexit_registered
+    if not _atexit_registered:
+        atexit.register(shutdown_all)
+        _atexit_registered = True
 
 
 class RealtimeThread(threading.Thread):
@@ -19,6 +39,32 @@ class RealtimeThread(threading.Thread):
     force_reload = False
     recorder = None  # type: AudVisRecorder
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._stream_lock = threading.Lock()
+        _threads.add(self)
+
+    def _close_stream(self):
+        stream = self.stream
+        self.stream = None
+        if stream is None:
+            return
+        try:
+            stream.abort()
+        except Exception:
+            pass
+        try:
+            stream.close()
+        except Exception:
+            pass
+
+    def shutdown(self, timeout=1.0):
+        with self._stream_lock:
+            self.kill_me = True
+            self._close_stream()
+        if self.is_alive() and threading.current_thread() is not self:
+            self.join(timeout)
+
     def _restart_if_needed(self):
         req = self.requested_name
         req_channels = self.requested_channels
@@ -30,8 +76,7 @@ class RealtimeThread(threading.Thread):
         self.current_name = req
         self.current_channels = self.requested_channels
         self.callback_data = None
-        if self.stream and not self.stream.stopped:
-            self.stream.stop()
+        self._close_stream()
         if req is None:
             if self.callback_data is not None:
                 self.callback_data = None
@@ -58,13 +103,17 @@ class RealtimeThread(threading.Thread):
     def run(self):
         self.last_chunks = []
         while self._thread_continue():
-            try:
-                self._restart_if_needed()
-            except Exception as e:
-                self.error = str(e)
+            with self._stream_lock:
+                # Re-check under the lock: shutdown() may have closed everything meanwhile.
+                if self.kill_me:
+                    break
+                try:
+                    self._restart_if_needed()
+                except Exception as e:
+                    self.error = str(e)
             time.sleep(.2)
-        if self.stream and not self.stream.stopped:
-            self.stream.stop()
+        # Don't touch PortAudio here: during interpreter shutdown it may already be
+        # terminated/unloaded. Streams are closed by shutdown() from the main thread.
 
     def _thread_continue(self):
         if self.kill_me:

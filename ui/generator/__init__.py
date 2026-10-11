@@ -122,7 +122,8 @@ class AUDVIS_PT_GeneratorNpanel(AudVisButtonsPanel_Npanel):
         col = box.column(align=True)
         col.label(text="Sound:")
         if scene.sequence_editor is not None:
-            col.prop_search(scene.audvis, "example_sound_sequence", scene.sequence_editor, "sequences",
+            col.prop_search(scene.audvis, "example_sound_sequence", scene.sequence_editor,
+                            "strips" if hasattr(scene.sequence_editor, "strips") else "sequences",
                             icon='SOUND')
             col.prop(scene.audvis, "example_sequence_channel", icon="GHOST_DISABLED" if scene.audvis.example_sequence_channel==0 else "GHOST_ENABLED")
         col.prop(scene.audvis, "example_channel")

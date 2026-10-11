@@ -8,6 +8,7 @@ from bpy.types import (UIList, Operator)
 
 from ...utils import midi_number_to_note
 from ..buttonspanel import (AudVisButtonsPanel_Npanel)
+from . import map_mode
 from ...analyzer.midi_realtime import _MidiNoteMessage
 from ...analyzer.midi_realtime.midi_thread import _MidiControlMessage
 
@@ -210,7 +211,8 @@ class AUDVIS_PT_midiRealtimeNpanel(AudVisButtonsPanel_Npanel):
             col.label(text="Midi realtime not supported. Install mido first:")
             col.operator("audvis.install", text="Install python packages")
             return
-        col.prop(props, "inputs")
+        map_mode.draw_button(layout, context)
+        col = layout.column(align=True)
         row = col.row()
         row.template_list("AUDVIS_UL_midiInputList", "midi_input_list", props,
                           "inputs", props, "list_index")

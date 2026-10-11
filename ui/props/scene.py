@@ -10,12 +10,14 @@ from . import (
     spreaddrivers,
     daw_arrangement,
     realtimeprops,
+    eq,
 )
 from .. import (
     values,
     global_settings,
     realtime,
     generator,
+    motion,
 )
 from ...analyzer.video import webcam_toggle_callback
 
@@ -174,6 +176,28 @@ class AudvisSceneProperties(bpy.types.PropertyGroup):
 
     # shape modifier
     shapemodifier_enable: bpy.props.BoolProperty(name="Enable AudVis Shape Modifier")
+
+    # motion fx (cascade, scatter, orbit)
+    motion_enable: bpy.props.BoolProperty(name="Enable AudVis Motion FX", default=False,
+                                          update=motion.motion_enable_update,
+                                          description="Off = every effect stops and objects play their own"
+                                                      " animation again")
+    motion_master: bpy.props.FloatProperty(name="Master", default=1, min=0, max=1, subtype='FACTOR',
+                                           update=motion.refresh,
+                                           description="Multiplies the Influence of every Motion FX effect")
+    motion_fade_time: bpy.props.FloatProperty(name="Fade Time", default=1, min=0, soft_max=10, unit='TIME_ABSOLUTE',
+                                              description="Seconds for Engage / Release (0 = cut)")
+
+    # EQ / macros: 8 shared frequency bands Motion FX can opt into
+    eq_channel: bpy.props.IntProperty(name="Meter Sound Channel", default=1, min=1, soft_max=32)
+    eq_band_1: bpy.props.PointerProperty(type=eq.AudvisEQBandProperties)
+    eq_band_2: bpy.props.PointerProperty(type=eq.AudvisEQBandProperties)
+    eq_band_3: bpy.props.PointerProperty(type=eq.AudvisEQBandProperties)
+    eq_band_4: bpy.props.PointerProperty(type=eq.AudvisEQBandProperties)
+    eq_band_5: bpy.props.PointerProperty(type=eq.AudvisEQBandProperties)
+    eq_band_6: bpy.props.PointerProperty(type=eq.AudvisEQBandProperties)
+    eq_band_7: bpy.props.PointerProperty(type=eq.AudvisEQBandProperties)
+    eq_band_8: bpy.props.PointerProperty(type=eq.AudvisEQBandProperties)
 
     # example
     example_channel: bpy.props.IntProperty(name="Sound Channel", default=1, min=1, soft_max=32)

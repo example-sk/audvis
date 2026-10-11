@@ -4,3 +4,5 @@ doc/bl_app_templates_user/AudVis/startup.blend1
 venv/
 blender_autocomplete/
 wheels/
+dist/
+.DS_Store

@@ -83,7 +83,7 @@ class MidiFileAnalyzer(Analyzer):
         elif (type(midi_note) is list or type(midi_note) is tuple) and len(midi_note) in [2, 3]:
             midi_note = kwargs.get("midi", None)
             if (type(midi_note) is list or type(midi_note) is tuple) and len(midi_note) in [2, 3]:
-                return self._midi_multi_note_driver(low=None, high=None, ch=None, **kwargs)
+                return self._midi_multi_note_driver(low=None, high=None, ch=ch, **kwargs)
             else:
                 midi_note = midi_note_to_number(midi_note)
         elif type(midi_note) is str:

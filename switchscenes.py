@@ -35,14 +35,46 @@ def try_switch_scenes(current_scene):
     if set_this_scene is None:
         set_this_scene = bpy.data.scenes[0]
     _skip_to_start(current_scene)
-    _skip_to_start(set_this_scene)
-    bpy.context.window.scene = set_this_scene
-    # override for a bug: animation stuck switching frames 1 / 2 / 1 / 2 / 1 / 2... forever:
-    bpy.ops.screen.animation_play()  # pause
-    bpy.ops.screen.animation_play()  # play
-    # end override
+    switch_window_scene(bpy.context.window, set_this_scene)
     return True
+
+
+def switch_window_scene(window, scene):
+    """Show `scene` in `window` from its first frame and (re)start playback."""
+    _skip_to_start(scene)
+    window.scene = scene
+    # Scene changes are evaluated after the caller returns in newer Blender
+    # versions, so restarting playback synchronously can leave it stopped (or
+    # stuck bouncing between frames). Restart on the next main-loop tick.
+    _restart_playback(window)
 
 
 def _skip_to_start(scene):
     scene.frame_current = scene.frame_start
+
+
+def _restart_playback(window):
+    attempts = 0
+
+    def restart():
+        nonlocal attempts
+        attempts += 1
+        wm = bpy.context.window_manager
+        if wm is None or window not in list(wm.windows):
+            return None  # window was closed
+        screen = window.screen
+        try:
+            with bpy.context.temp_override(window=window, screen=screen):
+                # Always cancel the old playback first: its timer is still
+                # bound to the previous scene. Then play explicitly instead
+                # of toggling, so a stale playing-flag can't leave it paused.
+                if screen.is_animation_playing:
+                    bpy.ops.screen.animation_cancel(restore_frame=False)
+                bpy.ops.screen.animation_play()
+            return None
+        except (RuntimeError, AttributeError):
+            # Scene evaluation and operator context can take more than one
+            # tick. Give Blender a bounded retry window, then leave it alone.
+            return 0.05 if attempts < 40 else None
+
+    bpy.app.timers.register(restart, first_interval=0.0)

@@ -29,33 +29,40 @@ def invoke(operator, context, event):
     bpy.ops.wm.window_fullscreen_toggle()
     bpy.context.window_manager.windows.update()
     bpy.ops.object.select_all(action='DESELECT')
-    operator.callbacks.append(lambda: _play())
+    operator.callbacks.append(lambda: _play(window=window))
     operator.callbacks.append(lambda: _fullscreen(operator))
     window = context.window
     _hide_cursor(context, window)
-    operator.timer = context.window_manager.event_timer_add(.01, window=window)
+    operator.timer = context.window_manager.event_timer_add(.1, window=window)
     return {'RUNNING_MODAL'}
 
 
-def _play(requested_state=True):
-    if bpy.context.screen.is_animation_playing != requested_state:
-        bpy.ops.screen.animation_play()
+def _play(requested_state=True, window=None):
+    window = window or bpy.context.window
+    screen = window.screen
+    if screen.is_animation_playing != requested_state:
+        call_ops_override(bpy.ops.screen.animation_play, {
+            'window': window,
+            'screen': screen,
+        })
 
 
 def _fullscreen(operator):
     workspace = operator._workspace
+    screen = workspace.screens[0]
     override = {
-        'screen': workspace.screens[0],
-        'area': workspace.screens[0].areas[0]
+        'screen': screen,
+        'area': screen.areas[0]
     }
     call_ops_override(bpy.ops.screen.screen_full_area, override, use_hide_panels=True)
-    space = bpy.context.space_data
+    space = screen.areas[0].spaces.active
     if space is None:
         print("Known bug: can't setup vie3d options in the party workspace mode")
     else:
         space.overlay.show_overlays = False
-        space.shading.type = bpy.context.scene.audvis.party.shading
-        space.shading.show_xray_wireframe = bpy.context.scene.audvis.party.show_xray
+        scene = bpy.context.scene
+        space.shading.type = scene.audvis.party.shading
+        space.shading.show_xray_wireframe = scene.audvis.party.show_xray
         space.region_3d.view_perspective = 'CAMERA'
 
 

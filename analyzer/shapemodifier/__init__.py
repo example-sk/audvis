@@ -1,3 +1,4 @@
+from ...grease_pencil_compat import is_grease_pencil
 from ...utils import get_all_vse_strips
 from . import lib
 from . import vertexweight, greasepencil, uv, vertcolor
@@ -66,7 +67,7 @@ class ShapeModifier(Analyzer):
             uv.modify_uv(obj, scene, self._driver)
         elif animtype == 'vertcolor':
             vertcolor.modify_color(obj, scene, self._driver)
-        if obj.type == 'GPENCIL':
+        if is_grease_pencil(obj):
             greasepencil.modify_greasepencil(obj, scene, self._driver)
             return
         keys = obj.data.shape_keys
@@ -129,7 +130,7 @@ class ShapeModifier(Analyzer):
             shape_key_target_data.foreach_set('tilt', tilts)
         obj.data.update_tag()
         # shape_key_target_data.update()
-        if settings.is_baking and animtype not in ('uv', 'vertcolor') and obj.type != 'GPENCIL':
+        if settings.is_baking and animtype not in ('uv', 'vertcolor') and not is_grease_pencil(obj):
             for point in shape_key_target_data:
                 if animtype == 'curve-radius':
                     point.keyframe_insert("radius")

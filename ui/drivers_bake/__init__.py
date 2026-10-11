@@ -1,5 +1,7 @@
 import bpy
 
+from ...grease_pencil_compat import data_collection
+
 from ..buttonspanel import AudVisButtonsPanel_Npanel
 
 _is_baking = False
@@ -24,7 +26,7 @@ class DriverBakery:
             bpy.data.cameras,
             bpy.data.curves,
             # FreestyleLineStyle,
-            bpy.data.grease_pencils,
+            data_collection(bpy.data),
             bpy.data.shape_keys,
             bpy.data.lattices,
             bpy.data.lights,
@@ -63,8 +65,11 @@ class DriverBakery:
         # objects with "node_tree"
         for lst in nodetrees_traverse_list:
             for el in lst:
-                if el.node_tree is not None:
-                    self._add_if_driver(el.node_tree)
+                node_tree = getattr(el, "compositing_node_group", None) if isinstance(el, bpy.types.Scene) else getattr(el, "node_tree", None)
+                if isinstance(el, bpy.types.Scene) and not hasattr(el, "compositing_node_group"):
+                    node_tree = el.node_tree
+                if node_tree is not None:
+                    self._add_if_driver(node_tree)
 
     def clear_drivers(self):
         for el, path, array_index in self.list:

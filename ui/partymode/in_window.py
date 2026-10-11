@@ -39,7 +39,10 @@ def invoke(operator, context, event):
     bpy.ops.object.select_all(action='DESELECT')
     _hide_cursor(context, window)
     if not window.screen.is_animation_playing:
-        bpy.ops.screen.animation_play()
+        call_ops_override(bpy.ops.screen.animation_play, {
+            'window': window,
+            'screen': window.screen,
+        })
     screen = window.screen
     area = screen.areas[0]
     space = area.spaces[0]
@@ -53,7 +56,7 @@ def invoke(operator, context, event):
             'window': window,
             'screen': screen,
             'area': area,
-            'region': area.regions[0],
+            'region': next((region for region in area.regions if region.type == 'WINDOW'), area.regions[0]),
         })
         return None
 

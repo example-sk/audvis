@@ -13,10 +13,73 @@ class AudvisMidiInputProperties(bpy.types.PropertyGroup):
     input_name: bpy.props.EnumProperty(name="Input Device", items=ui_midi.input_device_options)
 
 
+def _map_update(self, context):
+    ui_midi.mapping.forget(self)
+
+
+class AudvisMidiMapProperties(bpy.types.PropertyGroup):
+    """A knob / fader / pad of a MIDI controller mapped to a property or an action."""
+    enable: bpy.props.BoolProperty(name="Enable", default=True)
+    uid: bpy.props.StringProperty()
+    # source
+    kind: bpy.props.EnumProperty(name="Type", items=[
+        ('cc', "CC", "Knob, fader or CC button"),
+        ('note', "Note", "Pad or key"),
+    ], update=_map_update)
+    number: bpy.props.IntProperty(name="Number", min=0, max=127, update=_map_update,
+                                  description="CC number or note number")
+    channel: bpy.props.IntProperty(name="Channel", default=0, min=0, max=16, update=_map_update,
+                                   description="MIDI channel, 0 = any")
+    device: bpy.props.StringProperty(name="Device", update=_map_update,
+                                     description="Only this input device. Empty = any")
+    # target
+    target: bpy.props.EnumProperty(name="Controls", items=[
+        ('property', "Property", "A value in Blender (AudVis or native)"),
+        ('action', "Action", "Press to do something"),
+    ], update=_map_update)
+    full_path: bpy.props.StringProperty(name="Data Path", update=ui_midi.mapping.on_path_update,
+                                        description="Right-click a property > Copy Full Data Path, paste here."
+                                                    " Or right-click it > AudVis: MIDI Learn")
+    id_type: bpy.props.StringProperty()
+    id_name: bpy.props.StringProperty()
+    data_path: bpy.props.StringProperty()
+    index: bpy.props.IntProperty(default=-1)
+    action: bpy.props.EnumProperty(name="Action", items=[
+        ('play', "Play / Pause", ""),
+        ('next_scene', "Next Scene", "Like the Scenes grid, in project order"),
+        ('prev_scene', "Previous Scene", ""),
+        ('scene', "Go to Scene", ""),
+        ('engage', "Motion FX: Engage All", ""),
+        ('release', "Motion FX: Release All", ""),
+        ('stop', "Motion FX: Stop All", ""),
+    ], update=_map_update)
+    scene_name: bpy.props.StringProperty(name="Scene")
+    # response
+    response: bpy.props.EnumProperty(name="Response", items=[
+        ('range', "Fader / Knob", "Follow the knob (pads: velocity while held)"),
+        ('momentary', "Hold", "Max while pressed, Min when released"),
+        ('toggle', "Toggle", "Each press switches between Min and Max"),
+    ], update=_map_update)
+    range_min: bpy.props.FloatProperty(name="Min", default=0, update=_map_update)
+    range_max: bpy.props.FloatProperty(name="Max", default=1, update=_map_update)
+    invert: bpy.props.BoolProperty(name="Invert", default=False)
+    curve: bpy.props.FloatProperty(name="Curve", default=1, min=.1, max=10,
+                                   description="1 = linear. Higher = finer control at the low end")
+    smoothing: bpy.props.FloatProperty(name="Smoothing", default=0, min=0, max=.98, subtype='FACTOR',
+                                       description="Glide to the knob value instead of jumping")
+    pickup: bpy.props.BoolProperty(name="Pickup", default=False, update=_map_update,
+                                   description="Don't jump: wait until the knob reaches the current value."
+                                               " For when the value was changed with the mouse or a scene switch")
+    record: bpy.props.BoolProperty(name="Record", default=False,
+                                   description="While playing, insert keyframes as you move the knob")
+
+
 class AudvisMidiProperties(bpy.types.PropertyGroup):
     enable: bpy.props.BoolProperty(name="Enable Midi Realtime", default=False)
     list_index: bpy.props.IntProperty(name="List Index", default=1)
     inputs: bpy.props.CollectionProperty(name="Midi Inputs", type=AudvisMidiInputProperties)
+    maps: bpy.props.CollectionProperty(name="MIDI Mappings", type=AudvisMidiMapProperties)
+    maps_index: bpy.props.IntProperty(name="Active Mapping", default=0)
 
 
 class AudvisMidiTrackProperties(bpy.types.PropertyGroup):
@@ -76,5 +139,6 @@ classes = [
     AudvisMidiFileProperties,
     AudvisMidiFilesProperties,
     AudvisMidiInputProperties,
+    AudvisMidiMapProperties,
     AudvisMidiProperties,
 ]

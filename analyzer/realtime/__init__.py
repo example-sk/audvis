@@ -25,6 +25,7 @@ class RealtimeAnalyzer(Analyzer):
             import sounddevice as sd
             self.sd = sd
             self.supported = True
+            realtime_thread.register_atexit()
         except Exception as e:
             self.supported = False
             # print("AudVis", e)
@@ -41,7 +42,7 @@ class RealtimeAnalyzer(Analyzer):
 
     def kill(self):
         if self.thread is not None:
-            self.thread.kill_me = True
+            self.thread.shutdown()
 
     def get_error(self):
         if self.thread is not None:

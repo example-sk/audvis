@@ -1,0 +1,2 @@
+# Blender supplies NumPy; do not bundle a second copy.
+opencv-python==4.10.0.84

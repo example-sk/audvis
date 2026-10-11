@@ -53,3 +53,34 @@ only one frame from your original data.
 - **Bake Shape Modifier** - the whole animation will be baked into animation data, so you can render your animation on a
   render farm or different computer where you don't have AudVis installed.
 - **Clean Data** - deleted all the relevant shape keys, vertex groups and vertex colors
+## Grease Pencil versions
+
+The Shape Modifier recognizes both legacy `GPENCIL` objects (Blender 4.2 and
+older) and the `GREASEPENCIL` objects introduced in Blender 4.3. The newer path
+copies the source drawing, including its stroke attributes, before deformation.
+Layer selection, baking, and Clean Data use the corresponding frame API.
+
+Legacy Pressure/Strength settings appear as Radius/Opacity for newer objects.
+The saved setting identifiers remain unchanged. Radius uses the new API's
+world-space units, so existing Pressure factors may need adjustment; matching
+numeric values does not guarantee matching line thickness. Video contours also
+use the appropriate drawing API, with a default radius of 0.02 for new drawings.
+
+Frame 0 is reserved for source geometry and is skipped as a bake destination.
+Start a bake at frame 1 or later. Clean Data removes frames above zero, retaining
+the source, as in the legacy workflow.
+
+Compatibility follows [Blender's Grease Pencil migration guide](https://developer.blender.org/docs/release_notes/4.3/grease_pencil_migration/).
+This does not resolve other Blender-version or dependency-packaging issues.
+
+Developer checks:
+
+```sh
+python3 -m unittest discover -s tests -v
+blender --background --factory-startup --python-exit-code 1 --python tests/blender_grease_pencil_smoke.py
+```
+
+Run the Blender smoke test with both Blender 4.2 and the newer target release.
+It tests real drawing creation, repeated deformation without source mutation,
+radius baking, and frame cleanup without requiring audio packages. Unit tests
+use stand-ins and do not establish Blender runtime compatibility on their own.

@@ -105,7 +105,6 @@ class LastNotesList(list):
                 if n.time_end == 0 and n.channel == msg.channel and n.note == msg.note and n.input_name == msg.input_name:
                     n.time_end = max(msg.time, n.time_start + NOTE_MIN_DURATION)
                     # break
-        print(len(self), [(n.note, n.velocity) for n in self])
 
 
 class MidiThread(threading.Thread):
@@ -113,6 +112,7 @@ class MidiThread(threading.Thread):
     inputs = None
     data = None
     data_controls = None
+    note_counts = None  # input -> channel -> note -> number of note-ons, so quick taps between reads count
     samplerate = None
     kill_me = False
     callback_data = None
@@ -132,6 +132,7 @@ class MidiThread(threading.Thread):
         self.last_notes_list = LastNotesList()
         self.data = nested_dict()
         self.data_controls = nested_dict()
+        self.note_counts = nested_dict()
         self.requested_devices = []
         while self._thread_continue():
             self._ensure_inputs()
@@ -177,9 +178,13 @@ class MidiThread(threading.Thread):
     def _process_messages(self, msgs):
         data_notes = deepcopy(self.data)
         data_controls = deepcopy(self.data_controls)
+        note_counts = deepcopy(self.note_counts)
         for msg in msgs:
             if type(msg) == _MidiNoteMessage:
                 val = msg.velocity * 1.0 if msg.on else 0.0
+                if val > 0:
+                    channel_counts = note_counts[msg.input_name][msg.channel]
+                    channel_counts[msg.note] = channel_counts.get(msg.note, 0) + 1
                 data_notes[msg.input_name][msg.channel][msg.note] = val
                 if val == 0.0:
                     del data_notes[msg.input_name][msg.channel][msg.note]
@@ -192,6 +197,7 @@ class MidiThread(threading.Thread):
                 data_controls[msg.input_name][msg.channel][msg.control] = msg.value * 1.0
         self.data = data_notes
         self.data_controls = data_controls
+        self.note_counts = note_counts
 
     def restart_all_inputs(self):
         self._kill_all = True
@@ -201,6 +207,7 @@ class MidiThread(threading.Thread):
         if self._kill_all:
             self.data = nested_dict()
             self.data_controls = nested_dict()
+            self.note_counts = nested_dict()
             self._kill_all = False
             kill_all = True
         if self.inputs is not None:

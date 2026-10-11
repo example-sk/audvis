@@ -1,6 +1,7 @@
 from random import Random
 
 from . import lib
+from ...grease_pencil_compat import strokes, move_frame, copy_drawing_frame
 
 Random
 
@@ -17,8 +18,7 @@ def _get_frame(layer, frame_num, move_first_available=False):
             return frame
     if move_first_available and len(layer.frames) > 0:
         frame = layer.frames[0]
-        frame.frame_number = frame_num
-        return frame
+        return move_frame(layer, frame, frame_num)
     return layer.frames.new(frame_num)
 
 
@@ -29,9 +29,10 @@ def _reset_strokes(layer_from, layer_to):
         layer_to.strokes.new()
 
 
-def _stroke(obj, stroke_from, stroke_to, driver, indexes, weights):
+def _stroke(obj, stroke_from, stroke_to, driver, indexes, weights, modern=False):
     settings = obj.audvis.shapemodifier
-    stroke_to.line_width = stroke_from.line_width
+    if not modern:
+        stroke_to.line_width = stroke_from.line_width
     stroke_to.material_index = stroke_from.material_index
     points_count = len(stroke_from.points)
     if points_count != len(stroke_to.points):
@@ -42,9 +43,15 @@ def _stroke(obj, stroke_from, stroke_to, driver, indexes, weights):
     strengths = [0] * points_count
     pressures = [0] * points_count
 
-    stroke_from.points.foreach_get('co', locations)
-    stroke_from.points.foreach_get('strength', strengths)
-    stroke_from.points.foreach_get('pressure', pressures)
+    if modern:
+        for i, point in enumerate(stroke_from.points):
+            locations[i * 3:i * 3 + 3] = point.position
+            strengths[i] = point.opacity
+            pressures[i] = point.radius
+    else:
+        stroke_from.points.foreach_get('co', locations)
+        stroke_from.points.foreach_get('strength', strengths)
+        stroke_from.points.foreach_get('pressure', pressures)
     animtype = settings.animtype
     operation = settings.operation
     location_vector = settings.vector
@@ -62,15 +69,21 @@ def _stroke(obj, stroke_from, stroke_to, driver, indexes, weights):
         elif animtype == 'location':
             lib.location_setter.vector(locations, i, location_vector * val, operation)
         elif animtype == 'normal':
-            normal = stroke_from.points[i].co.normalized()
+            normal = (stroke_from.points[i].position if modern else stroke_from.points[i].co).normalized()
             lib.location_setter.vector(locations, i, normal * val, operation)
         elif animtype == 'track' and settings.track_object is not None:
-            loc = stroke_from.points[i].co
+            loc = stroke_from.points[i].position if modern else stroke_from.points[i].co
             lib.location_setter.track_to(locations, i, loc, val, obj, settings, operation)
 
-    stroke_to.points.foreach_set('co', locations)
-    stroke_to.points.foreach_set('strength', strengths)
-    stroke_to.points.foreach_set('pressure', pressures)
+    if modern:
+        for i, point in enumerate(stroke_to.points):
+            point.position = locations[i * 3:i * 3 + 3]
+            point.opacity = strengths[i]
+            point.radius = pressures[i]
+    else:
+        stroke_to.points.foreach_set('co', locations)
+        stroke_to.points.foreach_set('strength', strengths)
+        stroke_to.points.foreach_set('pressure', pressures)
     return points_count
 
 
@@ -78,7 +91,7 @@ def _get_points_count(obj, frame_num, reset=False):
     cnt = 0
     for layer in _get_layers(obj, reset):
         frame = _get_frame(layer, frame_num)
-        for stroke in frame.strokes:
+        for stroke in strokes(frame):
             cnt += len(stroke.points)
     return cnt
 
@@ -107,6 +120,9 @@ def modify_greasepencil(obj, scene, driver, reset=False):
     frame_to = 1
     if obj.audvis.shapemodifier.is_baking:
         frame_to = scene.frame_current
+    # Frame zero holds the unmodified source, including when baking starts at zero.
+    if frame_to == frame_from:
+        return
     for layer in _get_layers(obj, reset):
         _get_frame(layer, frame_from, move_first_available=True)  # just for move_first_available
     points_count = _get_points_count(obj, frame_from, reset)
@@ -122,9 +138,16 @@ def modify_greasepencil(obj, scene, driver, reset=False):
     indexes_i = 0
     for layer in _get_layers(obj, reset):
         layer_from = _get_frame(layer, frame_from, move_first_available=True)
-        layer_to = _get_frame(layer, frame_to)
-        if len(layer_from.strokes) != len(layer_to.strokes):
-            _reset_strokes(layer_from, layer_to)
-        for i in range(len(layer_from.strokes)):
-            indexes_i += _stroke(obj, layer_from.strokes[i], layer_to.strokes[i], driver,
-                                 indexes[indexes_i:], weights[indexes_i:])
+        modern = hasattr(layer_from, 'drawing')
+        if modern:
+            layer_to = copy_drawing_frame(layer, layer_from, frame_to)
+        else:
+            layer_to = _get_frame(layer, frame_to)
+            if len(layer_from.strokes) != len(layer_to.strokes):
+                _reset_strokes(layer_from, layer_to)
+        for stroke_from, stroke_to in zip(strokes(layer_from), strokes(layer_to)):
+            indexes_i += _stroke(obj, stroke_from, stroke_to, driver,
+                                 indexes[indexes_i:], weights[indexes_i:], modern=modern)
+        if modern:
+            layer_to.drawing.tag_positions_changed()
+    obj.data.update_tag()

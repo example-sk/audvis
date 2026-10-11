@@ -33,6 +33,8 @@ Here are some simple expressions to show what you probably want to do:
 - **midi** - `audvis(midi=[40, 50, 'avg'])` - average value from notes 40-50 
 - **midi** - `audvis(midi=[40, 50, 'avg_nonzero'])` - average of non-zero values from notes 40-50 
 - **midi** - `audvis(midi=[40, 50, 'sum'])` - sum of values from notes 40-50 
+- **cc** - `audvis(cc=7)` - knob / fader CC 7 of MIDI Realtime as **0..1**, not changed by the Driver Values
+  settings (`midi_control=7` gives the raw value scaled like sound). Works with **ch** and **device**
 - **device** - `audvis(midi=1, device="MIDI Device 1")` - name of the device from the MIDI Realtime panel
 - **ch** - `audvis(midi=1, ch="1")` - midi channel
 - **file** - `audvis(midi=3, file='MyGreatSong.mid')` - file name from the MIDI File panel
